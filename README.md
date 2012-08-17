@@ -1,4 +1,5 @@
-selenese-grid-maven-plugin
+selenese-maven-plugin
 ==========================
 
-A Maven plugin to use Selenese HTML test suites against a Selenium Grid 2
+A Maven plugin to use Selenese HTML test suites against a Selenium 2 Server or a
+Selenium 2 Grid.
