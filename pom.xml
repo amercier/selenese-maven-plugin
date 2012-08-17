@@ -4,9 +4,10 @@
 	<!-- Plugin declaration
 	======================================================================== -->
 	<groupId>com.github.amercier</groupId>
-	<artifactId>selenese</artifactId>
+	<artifactId>selenese-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
 	<version>1.0-SNAPSHOT</version>
+	
 	<name>Selenese Maven Mojo</name>
 	<url>http://github.com/amercier/selenese-maven-plugin</url>
 	<licenses>
@@ -37,16 +38,47 @@
 			<artifactId>maven-plugin-api</artifactId>
 			<version>3.0.4</version>
 		</dependency>
+		<dependency>
+			<groupId>org.openqa.selenium.client-drivers</groupId>
+			<artifactId>selenium-java-client-driver</artifactId>
+			<version>1.0-beta-1</version>
+		</dependency>
 	</dependencies>
+	
+	<repositories>
+		<repository>
+			<id>openqa-releases</id>
+			<url>http://nexus.openqa.org/content/repositories/releases</url>
+		</repository>
+		<repository>
+			<id>openqa-snapshots</id>
+			<url>http://nexus.openqa.org/content/repositories/snapshots</url>
+		</repository>
+	</repositories>
 	
 	<!-- Distribution management
 	======================================================================== -->
+	<distributionManagement>
+		<!-- 
+		<repository>
+			<id>repo</id>
+			<url>https://raw.github.com/amercier/amercier-mvn-repo/master/releases</url>
+		</repository>
+		 -->
+		<snapshotRepository>
+			<id>snapshot-repo</id>
+			<url>https://raw.github.com/amercier/amercier-mvn-repo/master/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
+	<!-- 
 	<scm>
 		<connection>scm:git:git@github.com:amercier/selenese-maven-plugin.git</connection>
 		<developerConnection>scm:git:git@amercier/selenese-maven-plugin.git</developerConnection>
 		<url>git@github.com:amercier/selenese-maven-plugin.git</url>
 	</scm>
-	 
+	 -->
+	
 	<!-- Build
 	======================================================================== -->
 	<build>
