@@ -74,7 +74,7 @@ public class SeleneseMojo extends AbstractMojo {
 	 * 
 	 * @parameter expression="${selenium.server.port}"
 	 */
-	public int port = 4444;
+	public int port = 5555;
 	
 	/**
 	 * Comma-separated list of browsers, to be launched by the Selenium
@@ -136,9 +136,8 @@ public class SeleneseMojo extends AbstractMojo {
 		
 	}
 	
-	protected OutputStreamWriter _resultsWriter;
-	protected CommandProcessor   _commandProcessor;
-	protected Document           _document;
+	protected OutputStreamWriter   _resultsWriter;
+	protected HtmlCommandProcessor _commandProcessor;
 	
 	protected OutputStreamWriter getResultsWriter() {
 		return _resultsWriter;
@@ -152,16 +151,8 @@ public class SeleneseMojo extends AbstractMojo {
 		return _commandProcessor;
 	}
 	
-	protected void setCommandProcessor(CommandProcessor commandProcessor) {
+	protected void setCommandProcessor(HtmlCommandProcessor commandProcessor) {
 		_commandProcessor = commandProcessor;
-	}
-	
-	protected Document getDocument() {
-		return _document;
-	}
-	
-	protected void setDocument(Document document) {
-		_document = document;
 	}
 
 	protected boolean runTestSuite(File testSuite) throws Exception {
@@ -169,8 +160,8 @@ public class SeleneseMojo extends AbstractMojo {
 		TestSuite suite = new TestSuite();
 		suite.file = testSuite;
 		File suiteDirectory = suite.file.getParentFile();
-		setDocument(parseDocument(testSuite.getAbsolutePath()));
-		Element table = (Element) getDocument().getElementsByTagName("table").item(0);
+		Document suiteDocument = parseDocument(testSuite.getAbsolutePath());
+		Element table = (Element) suiteDocument.getElementsByTagName("table").item(0);
 		NodeList tableRows = table.getElementsByTagName("tr");
 		Element tableNameRow = (Element) tableRows.item(0);
 		suite.name = tableNameRow.getTextContent();
@@ -228,16 +219,16 @@ public class SeleneseMojo extends AbstractMojo {
 	public boolean runTestCase(File testCase) throws Exception {
 		TestCase test = new TestCase();
 		test.file = testCase;
-		runTestCase(test);
+		Document outputDocument = runTestCase(test);
 		
 		// Print the DOM node
 		if(getResultsWriter() != null) {
-			outputDocument(getResultsWriter());
+			outputDocument(getResultsWriter(), outputDocument);
 		}
 		return test.result;
 	}
 
-	public boolean runTestCase(TestCase test) throws Exception {
+	public Document runTestCase(TestCase test) throws Exception {
 		String filename = test.file.toString();
 		getLog().debug("Running " + filename + " against " + host + ":" + port + " with " + browser);
 		Document document = parseDocument(filename);
@@ -287,7 +278,7 @@ public class SeleneseMojo extends AbstractMojo {
 			getCommandProcessor().start();
 			test.commands = new Command[tableRows.getLength() - 1];
 			for (int i = 1; i < tableRows.getLength(); i++) {
-				Command command = executeStep((Element) tableRows.item(i));
+				Command command = executeStep((Element) tableRows.item(i), document);
 				test.commands[i - 1] = command;
 				if (command.failure) {
 					test.result = false;
@@ -306,10 +297,10 @@ public class SeleneseMojo extends AbstractMojo {
 		document.getElementById("result").setTextContent(resultState);
 		Element log = document.getElementById("log");
 		log.setTextContent(log.getTextContent() + resultLog + "\n");
-		return test.result;
+		return document;
 	}
 
-	public Command executeStep(Element stepRow) throws Exception {
+	public Command executeStep(Element stepRow, Document document) throws Exception {
 		Command command = new Command();
 		NodeList stepFields = stepRow.getElementsByTagName("td");
 		String cmd = stepFields.item(0).getTextContent();
@@ -354,9 +345,9 @@ public class SeleneseMojo extends AbstractMojo {
 			command.result = result;
 			passed = false;
 		}
-		stepRow.appendChild(getDocument().createElement("td")).setTextContent(state);
+		stepRow.appendChild(document.createElement("td")).setTextContent(state);
 		if (result != null) {
-			stepRow.appendChild(getDocument().createElement("td")).setTextContent(result);
+			stepRow.appendChild(document.createElement("td")).setTextContent(result);
 		}
 		command.failure = !passed && !cmd.startsWith("verify");
 		return command;
@@ -365,13 +356,13 @@ public class SeleneseMojo extends AbstractMojo {
 	Document parseDocument(String filename) throws Exception {
 		FileReader reader = new FileReader(filename);
 		String firstLine = new BufferedReader(reader).readLine();
-		reader.close();
 		Document document = null;
+		reader.close();
 		if (firstLine.startsWith("<?xml")) {
 			System.err.println("XML detected; using default XML parser.");
 		} else {
 			try {
-				Class nekoParserClass = Class.forName("org.cyberneko.html.parsers.DOMParser");
+				Class<?> nekoParserClass = Class.forName("org.cyberneko.html.parsers.DOMParser");
 				Object parser = nekoParserClass.newInstance();
 				Method parse = nekoParserClass.getMethod("parse", new Class[] { String.class });
 				Method getDocument = nekoParserClass.getMethod("getDocument", new Class[0]);
@@ -397,7 +388,7 @@ public class SeleneseMojo extends AbstractMojo {
 		return document;
 	}
 
-	void outputDocument(Writer out) throws Exception {
+	void outputDocument(Writer out, Document document) throws Exception {
 		
 		// Set up the output transformer
 		TransformerFactory transfac = TransformerFactory.newInstance();
@@ -407,7 +398,7 @@ public class SeleneseMojo extends AbstractMojo {
 
 		// Print the DOM node
 		StreamResult result = new StreamResult(out);
-		DOMSource source = new DOMSource(getDocument());
+		DOMSource source = new DOMSource(document);
 		trans.transform(source, result);
 	}
 	
