@@ -1,6 +1,5 @@
 package com.github.amercier.selenese_maven_plugin;
 
-import com.thoughtworks.selenium.HttpCommandProcessor;
 import com.thoughtworks.selenium.SeleniumException;
 
 class HtmlCommandProcessor extends HttpCommandProcessor {
@@ -10,8 +9,7 @@ class HtmlCommandProcessor extends HttpCommandProcessor {
 
 	boolean expectError;
 
-	public HtmlCommandProcessor(String host, int port, String browser,
-			String baseUrl) {
+	public HtmlCommandProcessor(String host, int port, String browser, String baseUrl) {
 		super(host, port, browser, baseUrl);
 	}
 
@@ -60,5 +58,11 @@ class HtmlCommandProcessor extends HttpCommandProcessor {
 			}
 		}
 
+	}
+	
+	@Override
+	public String executeCommandOnServlet(String command) {
+		System.out.println("Executing command on servlet: " + command);
+		return super.executeCommandOnServlet(command);
 	}
 }

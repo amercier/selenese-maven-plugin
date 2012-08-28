@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,7 +75,7 @@ public class SeleneseMojo extends AbstractMojo {
 	 * 
 	 * @parameter expression="${selenium.server.port}"
 	 */
-	public int port = 5555;
+	public int port = 4444;
 	
 	/**
 	 * Comma-separated list of browsers, to be launched by the Selenium
@@ -82,7 +83,7 @@ public class SeleneseMojo extends AbstractMojo {
 	 * 
 	 * @parameter expression="${selenium.browser}"
 	 */
-	public String browser = "*firefox";
+	public String[] browsers = new String[] { "*firefox" };
 	
 	/**
 	 * The file to write the test results reports
@@ -90,14 +91,18 @@ public class SeleneseMojo extends AbstractMojo {
 	 * @parameter expression="${selenium.resultsFile}"
 	 * @required
 	 */
-	File resultsFile;
+	public File resultsFile;
+	
+	/**
+	 * JavaScript user extensions
+	 * @parameter expression="${selenium.jsExtensions}"
+	 */
+	public File[] jsExtensions;
 	
 	/**
 	 * Run the tests
 	 */
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		
-		getLog().debug("Running test suite " + testSuite + " against " + host + ":" + port + " with " + browser);
 		
 		try {
 			
@@ -114,10 +119,14 @@ public class SeleneseMojo extends AbstractMojo {
 			
 			// Run either the test case (if specified) or the test suite
 			if(testCase != null) {
-				runTestCase(testCase);
+				for(String browser : browsers) {
+					runTestCase(testCase, browser);
+				}
 			}
 			else {
-				runTestSuite(testSuite);
+				for(String browser : browsers) {
+					runTestSuite(testSuite, browser);
+				}
 			}
 		}
 		catch(Exception e) {
@@ -155,12 +164,14 @@ public class SeleneseMojo extends AbstractMojo {
 		_commandProcessor = commandProcessor;
 	}
 
-	protected boolean runTestSuite(File testSuite) throws Exception {
+	protected boolean runTestSuite(File testSuite, String browser) throws Exception {
+		
+		getLog().info("Running test suite " + testSuite + " against " + host + ":" + port + " with " + browser);
 		
 		TestSuite suite = new TestSuite();
 		suite.file = testSuite;
 		File suiteDirectory = suite.file.getParentFile();
-		Document suiteDocument = parseDocument(testSuite.getAbsolutePath());
+		Document suiteDocument = parseDocument(testSuite);
 		Element table = (Element) suiteDocument.getElementsByTagName("table").item(0);
 		NodeList tableRows = table.getElementsByTagName("tr");
 		Element tableNameRow = (Element) tableRows.item(0);
@@ -174,7 +185,7 @@ public class SeleneseMojo extends AbstractMojo {
 			TestCase test = new TestCase();
 			test.label = link.getTextContent();
 			test.file = new File(suiteDirectory, link.getAttribute("href"));
-			runTestCase(test);
+			runTestCase(test, browser);
 			suite.result &= test.result;
 			suite.tests[i - 1] = test;
 		}
@@ -216,10 +227,10 @@ public class SeleneseMojo extends AbstractMojo {
 		return suite.result;
 	}
 	
-	public boolean runTestCase(File testCase) throws Exception {
+	public boolean runTestCase(File testCase, String browser) throws Exception {
 		TestCase test = new TestCase();
 		test.file = testCase;
-		Document outputDocument = runTestCase(test);
+		Document outputDocument = runTestCase(test, browser);
 		
 		// Print the DOM node
 		if(getResultsWriter() != null) {
@@ -228,10 +239,16 @@ public class SeleneseMojo extends AbstractMojo {
 		return test.result;
 	}
 
-	public Document runTestCase(TestCase test) throws Exception {
-		String filename = test.file.toString();
-		getLog().debug("Running " + filename + " against " + host + ":" + port + " with " + browser);
-		Document document = parseDocument(filename);
+	public Document runTestCase(TestCase test, String browser) throws Exception {
+		String filename;
+		if(testSuite != null) {
+			filename = test.file.toString().replaceAll("^" + Pattern.quote(testSuite.getParent().toString()) + "\\/", "");
+		}
+		else {
+			filename = test.file.getName();
+		}
+		getLog().info("Running test case " + filename + " against " + host + ":" + port + " with " + browser);
+		Document document = parseDocument(test.file);
 
 		if (baseUrl == null) {
 			NodeList links = document.getElementsByTagName("link");
@@ -240,7 +257,7 @@ public class SeleneseMojo extends AbstractMojo {
 				baseUrl = link.getAttribute("href");
 			}
 		}
-		getLog().debug("Base URL=" + baseUrl);
+		getLog().info("Base URL=" + baseUrl);
 
 		Node body = document.getElementsByTagName("body").item(0);
 		Element resultContainer = document.createElement("div");
@@ -262,7 +279,7 @@ public class SeleneseMojo extends AbstractMojo {
 
 		NodeList tableRows = document.getElementsByTagName("tr");
 		Node theadRow = tableRows.item(0);
-		test.name = theadRow.getTextContent();
+		test.name = theadRow.getTextContent().trim();
 		Element stateCell = document.createElement("td");
 		stateCell.setTextContent("State");
 		theadRow.appendChild(stateCell);
@@ -274,11 +291,24 @@ public class SeleneseMojo extends AbstractMojo {
 		String resultState;
 		String resultLog;
 		test.result = true;
+		String testName = test.file.getName().replace("\\.html$", "");
 		try {
+			getLog().info("[" + testName + "] Starting a new session");
 			getCommandProcessor().start();
+			
+			// JS Extensions
+			/*
+			if(jsExtensions != null) {
+				for(File jsExtension : jsExtensions) {
+					getLog().info("[" + testName + "] Adding extension " + jsExtension.getName());
+					//getCommandProcessor().doCommand("storeEval", new String[]{FileUtils.readFileToString(jsExtension), "none"});
+				}
+			}
+			*/
+			
 			test.commands = new Command[tableRows.getLength() - 1];
 			for (int i = 1; i < tableRows.getLength(); i++) {
-				Command command = executeStep((Element) tableRows.item(i), document);
+				Command command = executeStep((Element) tableRows.item(i), document, testName);
 				test.commands[i - 1] = command;
 				if (command.failure) {
 					test.result = false;
@@ -287,6 +317,8 @@ public class SeleneseMojo extends AbstractMojo {
 			}
 			resultState = test.result ? "PASSED" : "FAILED";
 			resultLog = (test.result ? "Test Complete" : "Error");
+			
+			getLog().info("[" + testName + "] Ending session");
 			getCommandProcessor().stop();
 		} catch (Exception e) {
 			test.result = false;
@@ -300,7 +332,7 @@ public class SeleneseMojo extends AbstractMojo {
 		return document;
 	}
 
-	public Command executeStep(Element stepRow, Document document) throws Exception {
+	public Command executeStep(Element stepRow, Document document, String testName) throws Exception {
 		Command command = new Command();
 		NodeList stepFields = stepRow.getElementsByTagName("td");
 		String cmd = stepFields.item(0).getTextContent();
@@ -332,7 +364,7 @@ public class SeleneseMojo extends AbstractMojo {
 		String result;
 		String state;
 		boolean passed;
-		getLog().debug(cmd + " " + Arrays.asList(args));
+		getLog().info("[" + testName + "] Command " + cmd + " " + Arrays.asList(args));
 		try {
 			result = getCommandProcessor().doCommand(cmd, args);
 			command.result = result;
@@ -353,8 +385,8 @@ public class SeleneseMojo extends AbstractMojo {
 		return command;
 	}
 
-	Document parseDocument(String filename) throws Exception {
-		FileReader reader = new FileReader(filename);
+	Document parseDocument(File file) throws Exception {
+		FileReader reader = new FileReader(file.toString());
 		String firstLine = new BufferedReader(reader).readLine();
 		Document document = null;
 		reader.close();
@@ -366,7 +398,7 @@ public class SeleneseMojo extends AbstractMojo {
 				Object parser = nekoParserClass.newInstance();
 				Method parse = nekoParserClass.getMethod("parse", new Class[] { String.class });
 				Method getDocument = nekoParserClass.getMethod("getDocument", new Class[0]);
-				parse.invoke(parser, filename);
+				parse.invoke(parser, file.toString());
 				document = (Document) getDocument.invoke(parser);
 			} catch (Exception e) {
 				System.err.println("NekoHTML HTML parser not found; HTML4 support disabled.");
@@ -383,7 +415,7 @@ public class SeleneseMojo extends AbstractMojo {
 					return new org.xml.sax.InputSource(new java.io.StringReader(""));
 				}
 			});
-			document = builder.parse(filename);
+			document = builder.parse(file.toString());
 		}
 		return document;
 	}
