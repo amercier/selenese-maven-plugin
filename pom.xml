@@ -109,12 +109,34 @@
 				<artifactId>maven-release-plugin</artifactId>
 			</plugin>
 			
+			<!-- Documentation diagrams generation -->
+			<plugin>
+				<groupId>com.github.jeluard</groupId>
+				<artifactId>maven-plantuml-plugin</artifactId>
+				<configuration>
+					<sourceFiles>
+						<directory>${basedir}</directory>
+						<includes>
+							<include>docs/**.plantuml</include>
+						</includes>
+					</sourceFiles>
+					<outputInSourceDirectory>true</outputInSourceDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+						
 		</plugins>
 
 
 		<pluginManagement>
 			<plugins>
-			
+
 				<!-- Eclipse M2E Plugin configuration -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>

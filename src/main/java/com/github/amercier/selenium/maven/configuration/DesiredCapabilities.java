@@ -1,8 +1,8 @@
-package com.github.amercier.selenium.maven;
+package com.github.amercier.selenium.maven.configuration;
 
 import org.openqa.selenium.Platform;
 
-import com.github.amercier.selenium.maven.exceptions.UnknownPlatformException;
+import com.github.amercier.selenium.exceptions.UnknownPlatformException;
 
 /**
  * DesiredCapabilities configuration wrapper for Maven:

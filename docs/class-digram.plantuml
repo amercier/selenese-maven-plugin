@@ -1,0 +1,49 @@
+@startuml class-diagram.png
+
+' Packages look-and-feel
+skinparam packageStyle rect
+
+skinparam class {
+	ArrowColor	   #000000
+	BackgroundColor #fffde3
+	BorderColor     #000000
+}
+
+skinparam package {
+	BorderColor     #666666
+	BackgroundColor #ffffff
+	FontSize        13
+	FontColor       #333333
+}
+
+skinparam circledCharacterFontColor black
+skinparam circledCharacterFontSize  8
+skinparam circledCharacterFontStyle bold
+skinparam circledCharacterFontName  Arial
+skinparam circledCharacterRadius    8
+
+package document {
+
+	abstract class AbstractTestDocument {
+		#sourceFile: File
+		#document: Document
+		+AbstractTestDocument(sourceFile: File)
+		+getSourceFile(): File
+		+getDocument(): Document
+	}
+	
+	class TestSuiteDocument {
+		getTestCaseDocuments(): TestCaseDocument[]
+	}
+	
+	class TestCaseDocument {
+	
+	}
+	
+	AbstractTestDocument <|-- TestSuiteDocument
+	AbstractTestDocument <|-- TestCaseDocument
+}
+
+
+
+@enduml

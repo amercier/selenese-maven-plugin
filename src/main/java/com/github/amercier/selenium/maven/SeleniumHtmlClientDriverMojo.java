@@ -1,10 +1,17 @@
 package com.github.amercier.selenium.maven;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.xml.sax.SAXException;
+
+import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
+import com.github.amercier.selenium.selenese.SeleneseTestCase;
+import com.github.amercier.selenium.selenese.document.TestCaseDocument;
+import com.github.amercier.selenium.selenese.document.TestSuiteDocument;
 
 /**
  * Goal which sends Selenese HTML tests to be run by a remote or local Selenium
@@ -81,28 +88,45 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 			}
 			
 			// Run either the test case (if specified) or the test suite
-			if(testCase != null) {
+			if(testSuite != null) {
 				for(DesiredCapabilities browserConfig : capabilities) {
-					runTestCase(testCase, browserConfig);
+					runTestSuite(new TestSuiteDocument(testSuite), browserConfig);
 				}
 			}
 			else {
 				for(DesiredCapabilities browserConfig : capabilities) {
-					runTestSuite(testSuite, browserConfig);
+					runTestCase(new TestCaseDocument(testCase), browserConfig);
 				}
 			}
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			throw new MojoFailureException(e.getMessage(), e);
 		}
-		
+	}
+	
+	/**
+	 * Ru a test suite
+	 * @param testSuiteDocument
+	 * @param capability
+	 * @throws IOException 
+	 * @throws SAXException 
+	 */
+	protected void runTestSuite(TestSuiteDocument testSuiteDocument, DesiredCapabilities capability) throws SAXException, IOException {
+		getLog().info("Running test suite " + testSuiteDocument.getSourceFile().getName() + " on config " + capability);
+		for(TestCaseDocument testCaseDocument : testSuiteDocument.getTestCaseDocuments()) {
+			runTestCase(testCaseDocument, capability);
+		}
 	}
 
-	protected void runTestSuite(File testSuite, DesiredCapabilities browserConfig) {
-		getLog().info("Running test suite " + testSuite.getName() + " on browser " + browserConfig);
-	}
-
-	protected void runTestCase(File testCase2, DesiredCapabilities browserConfig) {
-		getLog().info("Running test case " + testSuite.getName() + " on browser " + browserConfig);
+	/**
+	 * Run a test case
+	 * @param testCaseDocument
+	 * @param capability
+	 */
+	protected void runTestCase(TestCaseDocument testCaseDocument, DesiredCapabilities capability) {
+		getLog().info("Running test case " + testCaseDocument.getSourceFile().getName() + " on config " + capability);
+		for(SeleneseTestCase testCase : testCaseDocument.getTestCases()) {
+			new TestCaseRunner(testCase, capability.toCapabilities()).run();
+		}
 	}
 }

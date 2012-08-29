@@ -1,6 +1,6 @@
-package com.github.amercier.selenium.maven.exceptions;
+package com.github.amercier.selenium.exceptions;
 
-import com.github.amercier.selenium.maven.document.DocumentFactory;
+import com.github.amercier.selenium.selenese.document.DocumentFactory;
 
 @SuppressWarnings("serial")
 public class InvalidDocumentFactoryVerbosityException extends Exception {

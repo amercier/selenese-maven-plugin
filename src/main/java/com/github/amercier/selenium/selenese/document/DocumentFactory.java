@@ -1,4 +1,4 @@
-package com.github.amercier.selenium.maven.document;
+package com.github.amercier.selenium.selenese.document;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
 
-import com.github.amercier.selenium.maven.exceptions.InvalidDocumentFactoryVerbosityException;
+import com.github.amercier.selenium.exceptions.InvalidDocumentFactoryVerbosityException;
 
 /**
  * A common File-to-Document factory. Uses 

@@ -1,4 +1,4 @@
-package com.github.amercier.selenium.maven.exceptions;
+package com.github.amercier.selenium.exceptions;
 
 import org.openqa.selenium.Platform;
 

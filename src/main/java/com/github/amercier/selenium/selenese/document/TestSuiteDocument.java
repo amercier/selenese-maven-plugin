@@ -1,4 +1,4 @@
-package com.github.amercier.selenium.maven.document;
+package com.github.amercier.selenium.selenese.document;
 
 import java.io.File;
 import java.io.IOException;
