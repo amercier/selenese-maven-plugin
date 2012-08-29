@@ -45,13 +45,29 @@ public class DocumentFactory {
 	 * @param file The source file
 	 */
 	public DocumentFactory(File file) {
-		this.file = file;
+		this.setFile(file);
 		try {
 			this.setVerbosityLevel(VERBOSITY_DEFAULT);
 		}
 		catch (InvalidDocumentFactoryVerbosityException e) {
 			e.printStackTrace(); // will never happen
 		}
+	}
+	
+	/**
+	 * Set the file
+	 * @param file
+	 */
+	public void setFile(File file) {
+		this.file = file;
+	}
+	
+	/**
+	 * Get the file
+	 * @return Returns the source file
+	 */
+	public File getFile() {
+		return file;
 	}
 	
 	/**

@@ -2,10 +2,12 @@ package com.github.amercier.selenium.selenese.document;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 
 public class TestSuiteDocument extends AbstractTestDocument {
 	
@@ -18,18 +20,40 @@ public class TestSuiteDocument extends AbstractTestDocument {
 	public TestSuiteDocument(File sourceFile) throws SAXException, IOException {
 		super(sourceFile);
 	}
-
+	
 	/**
-	 * Get the test case documents of this test suite
-	 * @return Returns a lsit of {@link TestCaseDocuments Test case documents}
-	 * @throws IOException 
-	 * @throws SAXException 
+	 * Get the test suite from the document
+	 * 
+	 * @return Returns the test suite
+	 * @throws SAXException
+	 * @throws IOException
 	 */
-	public TestCaseDocument[] getTestCaseDocuments() throws SAXException, IOException {
-		List<TestCaseDocument> documents = new LinkedList<TestCaseDocument>();
+	public SeleneseTestSuite getTestSuite() throws SAXException, IOException {
 		
+		// Create the test suite object
+		SeleneseTestSuite suite = new SeleneseTestSuite(sourceFile.getName().replaceAll("/\\.html$", ""));
 		
+		// Add the test cases
+		Element table = (Element) document.getElementsByTagName("table").item(0);
+		NodeList tableRows = table.getElementsByTagName("tr");
+		for (int i = 1; i < tableRows.getLength(); i++) {
+			Element tableRow = (Element) tableRows.item(i);
+			Element cell = (Element) tableRow.getElementsByTagName("td").item(0);
+			Element link = (Element) cell.getElementsByTagName("a").item(0);
+			
+			// Add the test case
+			suite.addTestCase(
+					new TestCaseDocument(
+							new File(
+									sourceFile.getParent(),
+									link.getAttribute("href")
+								)
+						)
+						.getTestCase()
+						.setName(link.getTextContent()) // update the name with the one found in the suite
+				);
+		}
 		
-		return documents.toArray(new TestCaseDocument[0]);
+		return suite;
 	}
 }

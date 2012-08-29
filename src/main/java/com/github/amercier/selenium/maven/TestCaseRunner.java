@@ -30,9 +30,33 @@ public class TestCaseRunner extends Thread {
 	 * Create a test case runner
 	 */
 	public TestCaseRunner(SeleneseTestCase testCase, DesiredCapabilities capability) {
+		this.setTestCase(testCase);
+		this.setCapability(capability);
+		this.setResult(null);
+	}
+	
+	public SeleneseTestCase getTestCase() {
+		return testCase;
+	}
+	
+	public void setTestCase(SeleneseTestCase testCase) {
 		this.testCase = testCase;
+	}
+	
+	public DesiredCapabilities getCapability() {
+		return capability;
+	}
+	
+	public void setCapability(DesiredCapabilities capability) {
 		this.capability = capability;
-		this.result = null;
+	}
+	
+	public Boolean getResult() {
+		return result;
+	}
+	
+	public void setResult(Boolean result) {
+		this.result = result;
 	}
 
 	@Override

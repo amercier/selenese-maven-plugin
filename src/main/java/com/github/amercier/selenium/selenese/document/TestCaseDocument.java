@@ -2,8 +2,6 @@ package com.github.amercier.selenium.selenese.document;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.xml.sax.SAXException;
 
@@ -21,12 +19,22 @@ public class TestCaseDocument extends AbstractTestDocument {
 		super(sourceFile);
 	}
 
-	public SeleneseTestCase[] getTestCases() {
-		List<SeleneseTestCase> testCases = new LinkedList<SeleneseTestCase>();
+	/**
+	 * Get the test case from the document
+	 * 
+	 * @return Returns the test case
+	 * @throws SAXException
+	 * @throws IOException
+	 */
+	public SeleneseTestCase getTestCase() {
+		
+		// Create the test case object
+		SeleneseTestCase test = new SeleneseTestCase(sourceFile.getName().replaceAll("/\\.html$", ""));
+		
+		// Add the commands
 		
 		
-		
-		return testCases.toArray(new SeleneseTestCase[0]);
+		return test;
 	}
 
 	
