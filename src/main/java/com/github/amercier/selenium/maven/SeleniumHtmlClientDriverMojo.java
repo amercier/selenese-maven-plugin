@@ -1,18 +1,18 @@
 package com.github.amercier.selenium.maven;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.document.TestCaseDocument;
 import com.github.amercier.selenium.selenese.document.TestSuiteDocument;
+import com.github.amercier.selenium.selenese.log.Log;
 
 /**
  * Goal which sends Selenese HTML tests to be run by a remote or local Selenium
@@ -78,6 +78,16 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	 */
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		
+		CountDownLatch latch = null;
+		
+		// Create a Selenese-to-Maven log bridge
+		Log seleneseLog = new Log() {
+			public void debug(String message) { SeleniumHtmlClientDriverMojo.this.getLog().debug(message); }
+			public void info(String message)  { SeleniumHtmlClientDriverMojo.this.getLog().info(message);  }
+			public void warn(String message)  { SeleniumHtmlClientDriverMojo.this.getLog().warn(message);  }
+			public void error(String message) { SeleniumHtmlClientDriverMojo.this.getLog().error(message); }
+		};
+		
 		try {
 			
 			// Check testCase XOR testSuite
@@ -90,42 +100,47 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 			
 			// Run either the test case (if specified) or the test suite
 			if(testSuite != null) {
-				for(DesiredCapabilities browserConfig : capabilities) {
-					runTestSuite(new TestSuiteDocument(testSuite).getTestSuite(), browserConfig);
+				getLog().info("Reading test suite " + testSuite.getName());
+				SeleneseTestSuite suite = new TestSuiteDocument(testSuite, seleneseLog).getTestSuite();
+				
+				latch = new CountDownLatch(suite.getTestCases().length * capabilities.length);
+				getLog().info(suite.getTestCases().length + " test case(s) will be run on " + capabilities.length + " configuration(s) (total: " + suite.getTestCases().length * capabilities.length + ")");
+				
+				for(DesiredCapabilities capability : capabilities) {
+					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
+					for(SeleneseTestCase testCase : suite.getTestCases()) {
+						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
+						new TestCaseRunner(testCase, capability, latch).start();
+					}
 				}
 			}
 			else {
-				for(DesiredCapabilities browserConfig : capabilities) {
-					runTestCase(new TestCaseDocument(testCase).getTestCase(), browserConfig);
+				getLog().info("Reading test case " + testCase.getName());
+				SeleneseTestCase testCase = new TestCaseDocument(testSuite, seleneseLog).getTestCase();
+				
+				latch = new CountDownLatch(capabilities.length);
+				getLog().info("The test case will be run on " + capabilities.length + " configuration(s)");
+				
+				for(DesiredCapabilities capability : capabilities) {
+					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
+					new TestCaseRunner(testCase, capability, latch).start();
 				}
 			}
 		}
 		catch(Exception e) {
 			throw new MojoFailureException(e.getMessage(), e);
 		}
-	}
-	
-	/**
-	 * Run a test suite
-	 * @param testSuiteDocument
-	 * @param capability
-	 * @throws IOException 
-	 * @throws SAXException 
-	 */
-	protected void runTestSuite(SeleneseTestSuite testSuite, DesiredCapabilities capability) throws SAXException, IOException {
-		getLog().info("Running test suite " + testSuite.getName() + " on config " + capability);
-		for(SeleneseTestCase testCase : testSuite.getTestCases()) {
-			runTestCase(testCase, capability);
+		
+		// Wait for all test runners to terminate
+		if(latch != null) {
+			try {
+				getLog().debug("Waiting for " + latch.getCount() + " test runner(s) to finish");
+				latch.await();
+			}
+			catch (InterruptedException e) {
+				throw new MojoFailureException(e.getMessage(), e);
+			}
 		}
-	}
-
-	/**
-	 * Run a test case
-	 * @param testCaseDocument
-	 * @param capability
-	 */
-	protected void runTestCase(SeleneseTestCase testCase, DesiredCapabilities capability) {
-		getLog().info("Running test case " + testCase.getName() + " on config " + capability);
-		new TestCaseRunner(testCase, capability.toCapabilities()).run();
+		getLog().debug("All test runners have been terminated");
 	}
 }

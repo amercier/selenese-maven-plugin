@@ -1,8 +1,9 @@
 package com.github.amercier.selenium.maven;
 
-import org.openqa.selenium.remote.DesiredCapabilities;
+import java.util.concurrent.CountDownLatch;
 
-import com.github.amercier.selenium.exceptions.TestCaseFailedException;
+import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
+import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 
 /**
@@ -27,12 +28,18 @@ public class TestCaseRunner extends Thread {
 	protected Boolean result;
 	
 	/**
+	 * Synchronization manager
+	 */
+	protected CountDownLatch latch;
+	
+	/**
 	 * Create a test case runner
 	 */
-	public TestCaseRunner(SeleneseTestCase testCase, DesiredCapabilities capability) {
+	public TestCaseRunner(SeleneseTestCase testCase, DesiredCapabilities capability, CountDownLatch latch) {
 		this.setTestCase(testCase);
 		this.setCapability(capability);
 		this.setResult(null);
+		this.latch = latch;
 	}
 	
 	public SeleneseTestCase getTestCase() {
@@ -61,17 +68,22 @@ public class TestCaseRunner extends Thread {
 
 	@Override
 	public void run() {
-		while(!isInterrupted()) {
+		System.out.println("Starting running test case " + getTestCase().getName() + " (" + getTestCase().getCommands().length + " commands) on " + getCapability());
+		if(!isInterrupted()) {
 			try {
-				
+				for(SeleneseCommand command : getTestCase().getCommands()) {
+					if(isInterrupted()) {
+						break;
+					}
+					System.out.println("[" + getTestCase().getName() + " @ " + getCapability() + "] Running " + command);
+					Thread.sleep((long) (1000 * Math.random()));
+				}
 			}
 			catch(Exception e) {
-				
+				e.printStackTrace();
 			}
 		}
-	}
-	
-	protected void runTestCase() throws TestCaseFailedException {
-		
+		System.out.println("Finished running test case " + getTestCase().getName() + " on " + getCapability());
+		latch.countDown();
 	}
 }
