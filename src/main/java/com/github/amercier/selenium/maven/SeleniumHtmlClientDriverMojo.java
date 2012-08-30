@@ -1,6 +1,7 @@
 package com.github.amercier.selenium.maven;
 
 import java.io.File;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -98,6 +99,8 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				throw new RuntimeException("A testCase and testSuite file cannot both be specified");
 			}
 			
+			InetSocketAddress server = new InetSocketAddress(host, port);
+			
 			// Run either the test case (if specified) or the test suite
 			if(testSuite != null) {
 				getLog().info("Reading test suite " + testSuite.getName());
@@ -110,7 +113,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
 					for(SeleneseTestCase testCase : suite.getTestCases()) {
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-						new TestCaseRunner(testCase, capability, latch).start();
+						new TestCaseRunner(server, testCase, capability, latch, getLog()).start();
 					}
 				}
 			}
@@ -123,7 +126,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-					new TestCaseRunner(testCase, capability, latch).start();
+					new TestCaseRunner(server, testCase, capability, latch, getLog()).start();
 				}
 			}
 		}
