@@ -8,8 +8,21 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
+import com.github.amercier.selenium.selenese.log.DefaultLog;
+import com.github.amercier.selenium.selenese.log.Log;
 
 public class TestSuiteDocument extends AbstractTestDocument {
+	
+	/**
+	 * Create a Test Suite document
+	 * @param sourceFile The XML test suite file
+	 * @paran log        The log
+	 * @throws SAXException
+	 * @throws IOException
+	 */
+	public TestSuiteDocument(File sourceFile, Log log) throws SAXException, IOException {
+		super(sourceFile, log);
+	}
 	
 	/**
 	 * Create a Test Suite document
@@ -18,7 +31,7 @@ public class TestSuiteDocument extends AbstractTestDocument {
 	 * @throws IOException
 	 */
 	public TestSuiteDocument(File sourceFile) throws SAXException, IOException {
-		super(sourceFile);
+		this(sourceFile, new DefaultLog());
 	}
 	
 	/**
@@ -31,11 +44,12 @@ public class TestSuiteDocument extends AbstractTestDocument {
 	public SeleneseTestSuite getTestSuite() throws SAXException, IOException {
 		
 		// Create the test suite object
-		SeleneseTestSuite suite = new SeleneseTestSuite(sourceFile.getName().replaceAll("/\\.html$", ""));
+		SeleneseTestSuite suite = new SeleneseTestSuite(sourceFile.getName().replaceAll("\\.html$", ""));
 		
 		// Add the test cases
 		Element table = (Element) document.getElementsByTagName("table").item(0);
 		NodeList tableRows = table.getElementsByTagName("tr");
+		
 		for (int i = 1; i < tableRows.getLength(); i++) {
 			Element tableRow = (Element) tableRows.item(i);
 			Element cell = (Element) tableRow.getElementsByTagName("td").item(0);
@@ -47,7 +61,8 @@ public class TestSuiteDocument extends AbstractTestDocument {
 							new File(
 									sourceFile.getParent(),
 									link.getAttribute("href")
-								)
+								),
+							this.getLog()
 						)
 						.getTestCase()
 						.setName(link.getTextContent()) // update the name with the one found in the suite

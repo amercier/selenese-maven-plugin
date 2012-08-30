@@ -6,12 +6,14 @@ import java.io.IOException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.github.amercier.selenium.exceptions.InvalidDocumentFactoryVerbosityException;
+import com.github.amercier.selenium.selenese.log.DefaultLog;
+import com.github.amercier.selenium.selenese.log.DefaultLoggable;
+import com.github.amercier.selenium.selenese.log.Log;
 
 /**
  * Common class for test documents
  */
-public abstract class AbstractTestDocument {
+public abstract class AbstractTestDocument extends DefaultLoggable {
 	
 	/**
 	 * The HTML test suite source file
@@ -27,17 +29,26 @@ public abstract class AbstractTestDocument {
 	 * Create a new Test Document
 	 * 
 	 * @param sourceFile The XML source file
+	 * @param log        The log
+	 * @throws SAXException
+	 * @throws IOException
+	 */
+	public AbstractTestDocument(File sourceFile, Log log) throws SAXException, IOException {
+		super(log);
+		this.setSourceFile(sourceFile);
+		this.setDocument(new DocumentFactory(sourceFile, log).getDocument());
+	}
+	
+	/**
+	 * Create a new Test Document
+	 * 
+	 * @param sourceFile The XML source file
+	 * @param log        The log
 	 * @throws SAXException
 	 * @throws IOException
 	 */
 	public AbstractTestDocument(File sourceFile) throws SAXException, IOException {
-		this.setSourceFile(sourceFile);
-		try {
-			this.setDocument(new DocumentFactory(sourceFile).setVerbosityLevel(0).getDocument());
-		}
-		catch (InvalidDocumentFactoryVerbosityException e) {
-			e.printStackTrace(); // will never happen
-		}
+		this(sourceFile, new DefaultLog());
 	}
 	
 	/**
