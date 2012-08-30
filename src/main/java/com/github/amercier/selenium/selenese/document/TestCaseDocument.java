@@ -52,6 +52,7 @@ public class TestCaseDocument extends AbstractTestDocument {
 		SeleneseTestCase test = new SeleneseTestCase(sourceFile.getName().replaceAll("\\.html$", ""));
 		
 		// Add the commands
+		getLog().debug("Found " + (tableRows.getLength() - 1) + " commands");
 		for (int i = 1; i < tableRows.getLength(); i++) {
 			Element tableRow = (Element) tableRows.item(i);
 			NodeList rowCells = tableRow.getElementsByTagName("td");
@@ -60,9 +61,12 @@ public class TestCaseDocument extends AbstractTestDocument {
 			SeleneseCommand command = new SeleneseCommand(rowCells.item(0).getTextContent());
 			
 			// Add the arguments
+			getLog().debug("Command " + command.getCommand() + ": found " + (rowCells.getLength() - 1) + " arguments");
 			for (int j = 1; j < rowCells.getLength(); j++) {
 				command.addArgument(rowCells.item(j).getTextContent());
 			}
+			
+			test.addCommand(command);
 		}
 		
 		return test;

@@ -77,7 +77,7 @@ public class DocumentFactory extends DefaultLoggable {
 			// Prevents resolving namespaces (useless)
 			builder.setEntityResolver(new EntityResolver() {
 				public org.xml.sax.InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
-					DocumentFactory.this.getLog().warn("Ignoring entity " + publicId + ", " + systemId);
+					DocumentFactory.this.getLog().debug("Ignoring entity " + publicId + ", " + systemId);
 					return new org.xml.sax.InputSource(new java.io.StringReader(""));
 				}
 			});

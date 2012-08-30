@@ -50,6 +50,7 @@ public class TestSuiteDocument extends AbstractTestDocument {
 		Element table = (Element) document.getElementsByTagName("table").item(0);
 		NodeList tableRows = table.getElementsByTagName("tr");
 		
+		getLog().debug("Found " + (tableRows.getLength() - 1) + " test cases");
 		for (int i = 1; i < tableRows.getLength(); i++) {
 			Element tableRow = (Element) tableRows.item(i);
 			Element cell = (Element) tableRow.getElementsByTagName("td").item(0);
@@ -67,6 +68,8 @@ public class TestSuiteDocument extends AbstractTestDocument {
 						.getTestCase()
 						.setName(link.getTextContent()) // update the name with the one found in the suite
 				);
+			
+			getLog().debug("Added " + link.getTextContent() + " successfully");
 		}
 		
 		return suite;
