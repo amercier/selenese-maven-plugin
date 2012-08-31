@@ -3,16 +3,18 @@ package com.github.amercier.selenium.maven;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.CountDownLatch;
 
 import org.apache.maven.plugin.logging.Log;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
+import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseCommandInterpreter;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
+import com.github.amercier.selenium.thread.ObservableCountDownLatch;
 
 /**
  * A thread responsible of running a test case and report
@@ -40,15 +42,19 @@ public class TestCaseRunner extends Thread {
 	protected DesiredCapabilities capability;
 	
 	/**
-	 * The test result.
-	 * Null if not run yet, true if succeeded, false if failed
+	 * The URL of the web site to be tested
 	 */
-	protected Boolean result;
+	protected URL baseUrl;
+	
+	/**
+	 * The test failure. If null, test has succeeded
+	 */
+	protected Throwable failure;
 	
 	/**
 	 * Synchronization manager
 	 */
-	protected CountDownLatch latch;
+	protected ObservableCountDownLatch<TestCaseRunner> latch;
 	
 	/**
 	 * Log
@@ -58,12 +64,13 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * Create a test case runner
 	 */
-	public TestCaseRunner(InetSocketAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, CountDownLatch latch, Log log) {
-		this.setTestCase(testCase);
-		this.setCapability(capability);
-		this.setResult(null);
-		this.setLatch(latch);
-		this.setLog(log);
+	public TestCaseRunner(InetSocketAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log) {
+		setServer(server);
+		setTestCase(testCase);
+		setCapability(capability);
+		setBaseUrl(baseUrl);
+		setLatch(latch);
+		setLog(log);
 	}
 	
 	public InetSocketAddress getServer() {
@@ -90,19 +97,35 @@ public class TestCaseRunner extends Thread {
 		this.capability = capability;
 	}
 	
-	public Boolean getResult() {
-		return result;
+	public URL getBaseUrl() {
+		return baseUrl;
 	}
 	
-	public void setResult(Boolean result) {
-		this.result = result;
+	public void setBaseUrl(URL baseUrl) {
+		this.baseUrl = baseUrl;
 	}
 	
-	protected CountDownLatch getLatch() {
+	public boolean hasSucceeded() {
+		return this.getFailure() == null;
+	}
+	
+	public boolean hasFailed() {
+		return this.getFailure() != null;
+	}
+	
+	public Throwable getFailure() {
+		return failure;
+	}
+	
+	protected void setFailure(Throwable failure) {
+		this.failure = failure;
+	}
+	
+	protected ObservableCountDownLatch<TestCaseRunner> getLatch() {
 		return latch;
 	}
 	
-	protected void setLatch(CountDownLatch latch) {
+	protected void setLatch(ObservableCountDownLatch<TestCaseRunner> latch) {
 		this.latch = latch;
 	}
 	
@@ -116,29 +139,54 @@ public class TestCaseRunner extends Thread {
 	
 	@Override
 	public void run() {
-		System.out.println("Starting running test case " + getTestCase().getName() + " (" + getTestCase().getCommands().length + " commands) on " + getCapability());
+		getLog().debug(this + " Starting running test case (" + getTestCase().getCommands().length + " commands)");
 		if(!isInterrupted()) {
+			
+			WebDriver driver = null;
 			try {
 				
 				// Driver & interpreter initialization
-				WebDriver driver = initWebDriver();
+				driver = initWebDriver();
+				getLog().debug(this + " Initialized web driver successfully");
 				SeleneseCommandInterpreter intepreter = initCommandDriver(driver);
+				getLog().debug(this + " Initialized interpreter successfully");
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
 					if(isInterrupted()) {
 						break;
 					}
-					System.out.println("[" + getTestCase().getName() + " @ " + getCapability() + "] Running " + command);
+					getLog().debug(this + " Running " + command);
 					intepreter.execute(command);
 				}
 			}
-			catch(Exception e) {
-				e.printStackTrace();
+			catch(MalformedURLException e) {
+				getLog().debug(e);
+				this.setFailure(e);
+			}
+			catch(UnknownSeleneseCommandException e) {
+				getLog().debug(e);
+				this.setFailure(e);
+			}
+			catch(WebDriverException e) {
+				getLog().debug(e);
+				this.setFailure(e);
+			}
+			catch(RuntimeException e) {
+				getLog().debug(e);
+				this.setFailure(e);
+			}
+			finally {
+				// Close the driver unless its initialization failed
+				if(driver != null) {
+					getLog().debug(this + " Closing driver session");
+					driver.close();
+				}
 			}
 		}
-		System.out.println("Finished running test case " + getTestCase().getName() + " on " + getCapability());
-		latch.countDown();
+		
+		getLog().debug(this + " Finished running test case");
+		latch.countDown(this);
 	}
 	
 	protected URL getRemoteURL() throws MalformedURLException {
@@ -150,6 +198,11 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected SeleneseCommandInterpreter initCommandDriver(WebDriver driver) {
-		return new SeleneseCommandInterpreter(driver);
+		return new SeleneseCommandInterpreter(driver, this.getBaseUrl());
+	}
+	
+	@Override
+	public String toString() {
+		return "[" + getTestCase().getName() + " @ " + getCapability() + "]";
 	}
 }

@@ -3,10 +3,12 @@ package com.github.amercier.selenium.selenese.document;
 import java.io.File;
 import java.io.IOException;
 
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.log.DefaultLog;
 import com.github.amercier.selenium.selenese.log.Log;
@@ -40,8 +42,10 @@ public class TestSuiteDocument extends AbstractTestDocument {
 	 * @return Returns the test suite
 	 * @throws SAXException
 	 * @throws IOException
+	 * @throws InvalidSeleneseCommandException 
+	 * @throws DOMException 
 	 */
-	public SeleneseTestSuite getTestSuite() throws SAXException, IOException {
+	public SeleneseTestSuite getTestSuite() throws SAXException, IOException, DOMException, InvalidSeleneseCommandException {
 		
 		// Create the test suite object
 		SeleneseTestSuite suite = new SeleneseTestSuite(sourceFile.getName().replaceAll("\\.html$", ""));

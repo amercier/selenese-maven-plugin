@@ -3,10 +3,12 @@ package com.github.amercier.selenium.selenese.document;
 import java.io.File;
 import java.io.IOException;
 
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.log.DefaultLog;
@@ -41,10 +43,12 @@ public class TestCaseDocument extends AbstractTestDocument {
 	 * Get the test case from the document
 	 * 
 	 * @return Returns the test case
+	 * @throws InvalidSeleneseCommandException 
+	 * @throws DOMException 
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public SeleneseTestCase getTestCase() {
+	public SeleneseTestCase getTestCase() throws DOMException, InvalidSeleneseCommandException {
 		
 		NodeList tableRows = document.getElementsByTagName("tr");
 

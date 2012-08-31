@@ -1,19 +1,27 @@
 package com.github.amercier.selenium.maven;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.concurrent.CountDownLatch;
+import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.w3c.dom.DOMException;
+import org.xml.sax.SAXException;
 
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.document.TestCaseDocument;
 import com.github.amercier.selenium.selenese.document.TestSuiteDocument;
 import com.github.amercier.selenium.selenese.log.Log;
+import com.github.amercier.selenium.thread.CountDownLatchListener;
+import com.github.amercier.selenium.thread.ObservableCountDownLatch;
 
 /**
  * Goal which sends Selenese HTML tests to be run by a remote or local Selenium
@@ -30,7 +38,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	 * @parameter expression="${selenium.baseUrl}"
 	 * @required
 	 */
-	public String baseUrl;
+	public URL baseUrl;
 	
 	/**
 	 * The test suite to run
@@ -79,7 +87,21 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	 */
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		
-		CountDownLatch latch = null;
+		ObservableCountDownLatch<TestCaseRunner> latch = null;
+		
+		// Create a CountDownLatch listener that logs about test runner individual results
+		CountDownLatchListener<TestCaseRunner> listener = new CountDownLatchListener<TestCaseRunner>() {
+			public void fireCountedDown(ObservableCountDownLatch<TestCaseRunner> observableCountDownLatch, TestCaseRunner terminated) {
+				if(terminated.hasSucceeded()) {
+					SeleniumHtmlClientDriverMojo.this.getLog().info(terminated + " Succeeded");
+				}
+				else {
+					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " Failed (" + terminated.getFailure().getMessage() + ")");
+				}
+			}
+		};
+		
+		List<TestCaseRunner> testRunners = new LinkedList<TestCaseRunner>();
 		
 		// Create a Selenese-to-Maven log bridge
 		Log seleneseLog = new Log() {
@@ -106,14 +128,18 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				getLog().info("Reading test suite " + testSuite.getName());
 				SeleneseTestSuite suite = new TestSuiteDocument(testSuite, seleneseLog).getTestSuite();
 				
-				latch = new CountDownLatch(suite.getTestCases().length * capabilities.length);
+				latch = new ObservableCountDownLatch<TestCaseRunner>(suite.getTestCases().length * capabilities.length);
+				latch.addListener(listener);
+				
 				getLog().info(suite.getTestCases().length + " test case(s) will be run on " + capabilities.length + " configuration(s) (total: " + suite.getTestCases().length * capabilities.length + ")");
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
 					for(SeleneseTestCase testCase : suite.getTestCases()) {
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-						new TestCaseRunner(server, testCase, capability, latch, getLog()).start();
+						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog());
+						testRunners.add(testRunner);
+						testRunner.start();
 					}
 				}
 			}
@@ -121,29 +147,42 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				getLog().info("Reading test case " + testCase.getName());
 				SeleneseTestCase testCase = new TestCaseDocument(testSuite, seleneseLog).getTestCase();
 				
-				latch = new CountDownLatch(capabilities.length);
+				latch = new ObservableCountDownLatch<TestCaseRunner>(capabilities.length);
+				latch.addListener(listener);
+				
 				getLog().info("The test case will be run on " + capabilities.length + " configuration(s)");
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-					new TestCaseRunner(server, testCase, capability, latch, getLog()).start();
+					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog());
+					testRunners.add(testRunner);
+					testRunner.start();
 				}
 			}
 		}
-		catch(Exception e) {
+		catch (DOMException e) {
+			throw new MojoFailureException(e.getMessage(), e);
+		}
+		catch (InvalidSeleneseCommandException e) {
+			throw new MojoFailureException(e.getMessage(), e);
+		}
+		catch (SAXException e) {
+			throw new MojoFailureException(e.getMessage(), e);
+		}
+		catch (IOException e) {
 			throw new MojoFailureException(e.getMessage(), e);
 		}
 		
 		// Wait for all test runners to terminate
 		if(latch != null) {
 			try {
-				getLog().debug("Waiting for " + latch.getCount() + " test runner(s) to finish");
+				getLog().info("Waiting for " + latch.getCount() + " test runner(s) to finish");
 				latch.await();
 			}
 			catch (InterruptedException e) {
 				throw new MojoFailureException(e.getMessage(), e);
 			}
 		}
-		getLog().debug("All test runners have been terminated");
+		getLog().info("All test runners have been terminated");
 	}
 }

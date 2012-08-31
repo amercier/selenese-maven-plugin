@@ -4,12 +4,19 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
+
 public class SeleneseCommand {
+	
+	/**
+	 * Minimum command length
+	 */
+	private static final int COMMAND_LENGTH_MIN = 1;
 	
 	protected String command;
 	protected List<String> arguments;
 	
-	public SeleneseCommand(String command) {
+	public SeleneseCommand(String command) throws InvalidSeleneseCommandException {
 		this.setCommand(command);
 		this.arguments = new LinkedList<String>();
 	}
@@ -18,7 +25,10 @@ public class SeleneseCommand {
 		return command;
 	}
 	
-	public SeleneseCommand setCommand(String command) {
+	public SeleneseCommand setCommand(String command) throws InvalidSeleneseCommandException {
+		if(command == null || command.length() < COMMAND_LENGTH_MIN) {
+			throw new InvalidSeleneseCommandException(command);
+		}
 		this.command = command;
 		return this;
 	}
