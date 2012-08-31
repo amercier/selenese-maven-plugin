@@ -8,7 +8,7 @@ public class UnknownSeleneseCommandException extends Exception {
 	protected SeleneseCommand command;
 	
 	public UnknownSeleneseCommandException(SeleneseCommand command) {
-		super("Unknown Selenese command \"" + command.getCommand() + "\"");
+		super("Unknown Selenese command \"" + command.getName() + "\"");
 		this.command = command;
 	}
 

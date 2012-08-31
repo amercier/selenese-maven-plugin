@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
+import com.github.amercier.selenium.selenese.InvalidSeleneseCommandNameException;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.log.DefaultLog;
@@ -45,10 +46,11 @@ public class TestCaseDocument extends AbstractTestDocument {
 	 * @return Returns the test case
 	 * @throws InvalidSeleneseCommandException 
 	 * @throws DOMException 
+	 * @throws InvalidSeleneseCommandNameException 
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public SeleneseTestCase getTestCase() throws DOMException, InvalidSeleneseCommandException {
+	public SeleneseTestCase getTestCase() throws DOMException, InvalidSeleneseCommandNameException {
 		
 		NodeList tableRows = document.getElementsByTagName("tr");
 
@@ -65,9 +67,11 @@ public class TestCaseDocument extends AbstractTestDocument {
 			SeleneseCommand command = new SeleneseCommand(rowCells.item(0).getTextContent());
 			
 			// Add the arguments
-			getLog().debug("Command " + command.getCommand() + ": found " + (rowCells.getLength() - 1) + " arguments");
+			getLog().debug("Command " + command.getName() + ": found " + (rowCells.getLength() - 1) + " arguments");
 			for (int j = 1; j < rowCells.getLength(); j++) {
-				command.addArgument(rowCells.item(j).getTextContent());
+				if(!rowCells.item(j).getTextContent().trim().equals("")) {
+					command.addArgument(rowCells.item(j).getTextContent());
+				}
 			}
 			
 			test.addCommand(command);

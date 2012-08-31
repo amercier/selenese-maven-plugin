@@ -1,19 +1,20 @@
 package com.github.amercier.selenium.maven;
 
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.remote.RemoteWebDriver;
 
+import com.github.amercier.selenium.ServerAddress;
+import com.github.amercier.selenium.exceptions.CapabilitiesNotFoundException;
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
-import com.github.amercier.selenium.selenese.SeleneseCommandInterpreter;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
+import com.github.amercier.selenium.selenese.SeleneseWebDriver;
 import com.github.amercier.selenium.thread.ObservableCountDownLatch;
 
 /**
@@ -29,7 +30,7 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * The remote server / grid hub address
 	 */
-	protected InetSocketAddress server;
+	protected ServerAddress server;
 	
 	/**
 	 * The test case to run
@@ -64,7 +65,7 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * Create a test case runner
 	 */
-	public TestCaseRunner(InetSocketAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log) {
+	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log) {
 		setServer(server);
 		setTestCase(testCase);
 		setCapability(capability);
@@ -73,11 +74,11 @@ public class TestCaseRunner extends Thread {
 		setLog(log);
 	}
 	
-	public InetSocketAddress getServer() {
+	public ServerAddress getServer() {
 		return server;
 	}
 	
-	public void setServer(InetSocketAddress server) {
+	public void setServer(ServerAddress server) {
 		this.server = server;
 	}
 	
@@ -142,14 +143,12 @@ public class TestCaseRunner extends Thread {
 		getLog().debug(this + " Starting running test case (" + getTestCase().getCommands().length + " commands)");
 		if(!isInterrupted()) {
 			
-			WebDriver driver = null;
+			SeleneseWebDriver driver = null;
 			try {
 				
 				// Driver & interpreter initialization
 				driver = initWebDriver();
 				getLog().debug(this + " Initialized web driver successfully");
-				SeleneseCommandInterpreter intepreter = initCommandDriver(driver);
-				getLog().debug(this + " Initialized interpreter successfully");
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
@@ -157,48 +156,68 @@ public class TestCaseRunner extends Thread {
 						break;
 					}
 					getLog().debug(this + " Running " + command);
-					intepreter.execute(command);
+					//intepreter.execute(command);
+					driver.execute(command);
 				}
 			}
-			catch(MalformedURLException e) {
-				getLog().debug(e);
-				this.setFailure(e);
-			}
-			catch(UnknownSeleneseCommandException e) {
-				getLog().debug(e);
-				this.setFailure(e);
-			}
-			catch(WebDriverException e) {
-				getLog().debug(e);
-				this.setFailure(e);
-			}
-			catch(RuntimeException e) {
-				getLog().debug(e);
-				this.setFailure(e);
-			}
+			catch(CapabilitiesNotFoundException e)   { fail(e); }
+			catch(MalformedURLException e)           { fail(e); }
+			catch(WebDriverException e)              { fail(e); }
+			catch(RuntimeException e)                { fail(e); }
+			catch(InvalidSeleneseCommandException e) { fail(e); }
+			catch(UnknownSeleneseCommandException e) { fail(e); }
+			catch (InterruptedException e)           { fail(e); }
 			finally {
 				// Close the driver unless its initialization failed
 				if(driver != null) {
 					getLog().debug(this + " Closing driver session");
-					driver.close();
+					try {
+						driver.close();
+					}
+					catch(RuntimeException e) { fail(e); }
 				}
 			}
 		}
 		
 		getLog().debug(this + " Finished running test case");
-		latch.countDown(this);
+		
+		try {
+			latch.countDown(this);
+		}
+		catch(RuntimeException e) {
+			getLog().debug(e);
+			this.setFailure(new MojoExecutionException(e.getMessage(), e));
+		}
 	}
 	
-	protected URL getRemoteURL() throws MalformedURLException {
+	protected URL getServerURL() throws MalformedURLException {
 		return new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SERVER_PATH);
 	}
 	
-	protected WebDriver initWebDriver() throws MalformedURLException {
-		return new RemoteWebDriver(getRemoteURL(), getCapability().toCapabilities());
+	protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
+		try {
+			return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities());
+		}
+		catch(WebDriverException e) {
+			throw new CapabilitiesNotFoundException(getCapability(), getServer());
+		}
 	}
 	
-	protected SeleneseCommandInterpreter initCommandDriver(WebDriver driver) {
+	/*
+	protected SeleneseCommandInterpreter initCommandDriver(SeleneseWebDriver driver) {
 		return new SeleneseCommandInterpreter(driver, this.getBaseUrl());
+	}
+	*/
+	
+	protected void error(Throwable error) {
+		getLog().debug(error);
+		this.setFailure(error);
+		
+	}
+	
+	protected void fail(Throwable failure) {
+		getLog().debug(failure);
+		this.setFailure(new MojoExecutionException(failure.getMessage(), failure));
 	}
 	
 	@Override

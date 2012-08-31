@@ -2,7 +2,6 @@ package com.github.amercier.selenium.maven;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,8 +12,9 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.w3c.dom.DOMException;
 import org.xml.sax.SAXException;
 
-import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
+import com.github.amercier.selenium.ServerAddress;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
+import com.github.amercier.selenium.selenese.InvalidSeleneseCommandNameException;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.document.TestCaseDocument;
@@ -96,7 +96,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 					SeleniumHtmlClientDriverMojo.this.getLog().info(terminated + " Succeeded");
 				}
 				else {
-					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " Failed (" + terminated.getFailure().getMessage() + ")");
+					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " Failed (" + terminated.getFailure().getMessage().replaceAll("\\n.*", "") + ")");
 				}
 			}
 		};
@@ -121,7 +121,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				throw new RuntimeException("A testCase and testSuite file cannot both be specified");
 			}
 			
-			InetSocketAddress server = new InetSocketAddress(host, port);
+			ServerAddress server = new ServerAddress(host, port);
 			
 			// Run either the test case (if specified) or the test suite
 			if(testSuite != null) {
@@ -160,29 +160,33 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				}
 			}
 		}
-		catch (DOMException e) {
-			throw new MojoFailureException(e.getMessage(), e);
-		}
-		catch (InvalidSeleneseCommandException e) {
-			throw new MojoFailureException(e.getMessage(), e);
-		}
-		catch (SAXException e) {
-			throw new MojoFailureException(e.getMessage(), e);
-		}
-		catch (IOException e) {
-			throw new MojoFailureException(e.getMessage(), e);
-		}
+		catch (DOMException e)                        { throw new MojoFailureException(e.getMessage(), e); }
+		catch (InvalidSeleneseCommandNameException e) { throw new MojoFailureException(e.getMessage(), e); }
+		catch (SAXException e)                        { throw new MojoFailureException(e.getMessage(), e); }
+		catch (IOException e)                         { throw new MojoFailureException(e.getMessage(), e); }
+		catch(RuntimeException e)                     { throw new MojoFailureException(e.getMessage(), e); }
 		
 		// Wait for all test runners to terminate
 		if(latch != null) {
 			try {
-				getLog().info("Waiting for " + latch.getCount() + " test runner(s) to finish");
+				getLog().debug("Waiting for " + latch.getCount() + " test runner(s) to finish");
 				latch.await();
 			}
 			catch (InterruptedException e) {
 				throw new MojoFailureException(e.getMessage(), e);
 			}
 		}
-		getLog().info("All test runners have been terminated");
+		getLog().debug("All test runners have been terminated");
+		
+		for(TestCaseRunner testRunner : testRunners) {
+			if(testRunner.hasFailed()) {
+				if(testRunner.getFailure() instanceof MojoFailureException) {
+					throw (MojoFailureException)testRunner.getFailure();
+				}
+				else if(testRunner.getFailure() instanceof MojoExecutionException) {
+					throw (MojoExecutionException)testRunner.getFailure();
+				}
+			}
+		}
 	}
 }
