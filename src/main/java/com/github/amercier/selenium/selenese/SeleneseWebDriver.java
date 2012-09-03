@@ -4,8 +4,6 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
-
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -15,6 +13,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
+import com.github.amercier.selenium.selenese.assertions.Assert;
+import com.github.amercier.selenium.selenese.assertions.AssertionFailedException;
 import com.google.common.base.Predicate;
 
 public class SeleneseWebDriver extends RemoteWebDriver {
@@ -86,44 +86,35 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	}
 	
 	protected Pattern parsePattern(String selenesePattern) throws InvalidSeleneseCommandArgumentException {
-		if(PATTERN_REGEXP.matcher(selenesePattern).matches()) {
-			return Pattern.compile(selenesePattern);
+		Matcher matcher;
+		if((matcher = PATTERN_REGEXP.matcher(selenesePattern)).find()) {
+			return Pattern.compile(matcher.group(1));
 		}
-		else if(PATTERN_EXACT.matcher(selenesePattern).matches()) {
-			return Pattern.compile("^" + Pattern.quote(selenesePattern) + "$");
+		else if((matcher = PATTERN_EXACT.matcher(selenesePattern)).find()) {
+			return Pattern.compile("^" + Pattern.quote(matcher.group(1)) + "$");
 		}
-		else if(PATTERN_GLOB.matcher(selenesePattern).matches()) {
+		else if((matcher = PATTERN_GLOB.matcher(selenesePattern)).find()) {
 			// 1. Quote everything, including ? and *
 			// 2. Replace quoted \? with .? and \* with .*
-			return Pattern.compile("^" + Pattern.quote(selenesePattern).replaceAll("\\\\([\\?|\\*])", ".$1") + "$");
+			return Pattern.compile("^" + Pattern.quote(matcher.group(1)).replaceAll("\\\\([\\?|\\*])", ".$1") + "$");
 		}
 		else {
 			throw new InvalidSeleneseCommandArgumentException(selenesePattern);
 		}
 	}
 	
-	public void execute(SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException {
+	public void execute(SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, AssertionFailedException {
 		
 		String cmd = command.getName();
-		
-		System.out.println("Executing " + command);
 		
 		try {
 			if("open".equals(cmd)) {
 				get(getAbsoluteURL(command.getArgument(0)));
-				/*  TODO Remove waiting for dom to be ready
-				new WebDriverWait(this, (long)30.0).until(new Predicate<WebDriver>() {
-					public boolean apply(WebDriver input) {
-						System.out.println("document.readyState = " + SeleneseWebDriver.this.executeScript("return document.readyState", new Object[0]));
-						return SeleneseWebDriver.this.executeScript("return document.readyState", new Object[0]).equals("complete");
-					}
-				});
-				*/
 			}
 			else if("type"          .equals(cmd)) { findElement(command.getArgument(0)).sendKeys(command.getArgument(1)); }
 			else if("click"         .equals(cmd)) { findElement(command.getArgument(0)).click(); }
 			else if("pause"         .equals(cmd)) { pause(Long.parseLong(command.getArgument(0))); }
-			else if("assertLocation".equals(cmd)) { Assert.assertTrue(parsePattern(command.getArgument(0)).matcher(getCurrentUrl()).matches()); }
+			else if("assertLocation".equals(cmd)) { Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl()); }
 			else {
 				throw new UnknownSeleneseCommandException(command);
 			}

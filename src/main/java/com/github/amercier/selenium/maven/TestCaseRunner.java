@@ -15,6 +15,7 @@ import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.SeleneseWebDriver;
+import com.github.amercier.selenium.selenese.assertions.AssertionFailedException;
 import com.github.amercier.selenium.thread.ObservableCountDownLatch;
 
 /**
@@ -50,7 +51,7 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * The test failure. If null, test has succeeded
 	 */
-	protected Throwable failure;
+	protected Throwable failure = null;
 	
 	/**
 	 * Synchronization manager
@@ -148,7 +149,7 @@ public class TestCaseRunner extends Thread {
 				
 				// Driver & interpreter initialization
 				driver = initWebDriver();
-				getLog().debug(this + " Initialized web driver successfully");
+				getLog().info(this + " Starting");
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
@@ -160,13 +161,14 @@ public class TestCaseRunner extends Thread {
 					driver.execute(command);
 				}
 			}
-			catch(CapabilitiesNotFoundException e)   { fail(e); }
-			catch(MalformedURLException e)           { fail(e); }
-			catch(WebDriverException e)              { fail(e); }
-			catch(RuntimeException e)                { fail(e); }
-			catch(InvalidSeleneseCommandException e) { fail(e); }
-			catch(UnknownSeleneseCommandException e) { fail(e); }
-			catch (InterruptedException e)           { fail(e); }
+			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
+			catch(MalformedURLException e)           { raiseFailure(e); }
+			catch(WebDriverException e)              { raiseFailure(e); }
+			catch(RuntimeException e)                { raiseFailure(e); }
+			catch(InvalidSeleneseCommandException e) { raiseFailure(e); }
+			catch(UnknownSeleneseCommandException e) { raiseFailure(e); }
+			catch(InterruptedException e)            { raiseFailure(e); }
+			catch(AssertionFailedException e)        { raiseError(e); }
 			finally {
 				// Close the driver unless its initialization failed
 				if(driver != null) {
@@ -174,7 +176,7 @@ public class TestCaseRunner extends Thread {
 					try {
 						driver.close();
 					}
-					catch(RuntimeException e) { fail(e); }
+					catch(RuntimeException e) { raiseFailure(e); }
 				}
 			}
 		}
@@ -184,10 +186,7 @@ public class TestCaseRunner extends Thread {
 		try {
 			latch.countDown(this);
 		}
-		catch(RuntimeException e) {
-			getLog().debug(e);
-			this.setFailure(new MojoExecutionException(e.getMessage(), e));
-		}
+		catch(RuntimeException e) { raiseFailure(e); }
 	}
 	
 	protected URL getServerURL() throws MalformedURLException {
@@ -203,25 +202,19 @@ public class TestCaseRunner extends Thread {
 		}
 	}
 	
-	/*
-	protected SeleneseCommandInterpreter initCommandDriver(SeleneseWebDriver driver) {
-		return new SeleneseCommandInterpreter(driver, this.getBaseUrl());
-	}
-	*/
-	
-	protected void error(Throwable error) {
+	protected void raiseError(Throwable error) {
 		getLog().debug(error);
 		this.setFailure(error);
 		
 	}
 	
-	protected void fail(Throwable failure) {
+	protected void raiseFailure(Throwable failure) {
 		getLog().debug(failure);
 		this.setFailure(new MojoExecutionException(failure.getMessage(), failure));
 	}
 	
 	@Override
 	public String toString() {
-		return "[" + getTestCase().getName() + " @ " + getCapability() + "]";
+		return "Test case [" + getTestCase().getName() + " @ " + getCapability() + "]";
 	}
 }

@@ -125,13 +125,14 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 			
 			// Run either the test case (if specified) or the test suite
 			if(testSuite != null) {
-				getLog().info("Reading test suite " + testSuite.getName());
+				getLog().debug("Reading test suite " + testSuite.getName());
 				SeleneseTestSuite suite = new TestSuiteDocument(testSuite, seleneseLog).getTestSuite();
 				
 				latch = new ObservableCountDownLatch<TestCaseRunner>(suite.getTestCases().length * capabilities.length);
 				latch.addListener(listener);
 				
-				getLog().info(suite.getTestCases().length + " test case(s) will be run on " + capabilities.length + " configuration(s) (total: " + suite.getTestCases().length * capabilities.length + ")");
+				int testCasesCount = suite.getTestCases().length * capabilities.length;
+				getLog().info("Running " + testCasesCount + " test case" + (testCasesCount > 1 ? "s" : "") + " (" + suite.getTestCases().length + " test case" + (suite.getTestCases().length > 1 ? "s" : "") + " on " + capabilities.length + " configuration" + (capabilities.length > 1 ? "s" : "") + ") against " + baseUrl);
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
@@ -144,13 +145,13 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				}
 			}
 			else {
-				getLog().info("Reading test case " + testCase.getName());
+				getLog().debug("Reading test case " + testCase.getName());
 				SeleneseTestCase testCase = new TestCaseDocument(testSuite, seleneseLog).getTestCase();
 				
 				latch = new ObservableCountDownLatch<TestCaseRunner>(capabilities.length);
 				latch.addListener(listener);
 				
-				getLog().info("The test case will be run on " + capabilities.length + " configuration(s)");
+				getLog().info("Running " + capabilities.length + " test case" + (capabilities.length > 1 ? "s" : "") + " (1 test case on " + capabilities.length + " configuration" + (capabilities.length > 1 ? "s" : "") + ") against " + baseUrl);
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
