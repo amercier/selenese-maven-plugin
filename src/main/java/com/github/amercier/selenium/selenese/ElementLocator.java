@@ -12,25 +12,23 @@ public enum ElementLocator {
 	NAME (Pattern.compile("^name=(.*)$")),
 	LINK (Pattern.compile("^link=(.*)$")),
 	CSS  (Pattern.compile("^css=(.*)$")),
-	XPATH(Pattern.compile("^(xpath=)?(//.*)$")),
-	ID   (Pattern.compile("^(id(entifier)?=)?(.*)$")); // ID must be the last one as it matches everything
+	XPATH(Pattern.compile("^(xpath=)?(//.*)$"), 2),
+	ID   (Pattern.compile("^(id(entifier)?=)?(.*)$"), 3); // ID must be the last one as it matches everything
 	
 	private final Pattern pattern;
+	private final int     group;
 	
-	private ElementLocator(Pattern pattern) {
+	private ElementLocator(Pattern pattern, int group) {
 		this.pattern = pattern;
+		this.group = group;
 	}
 	
-	private int getGroup() {
-		switch(this) {
-			case ID   : return 3;
-			case XPATH: return 2;
-			default   : return 1;
-		}
+	private ElementLocator(Pattern pattern) {
+		this(pattern, 1);
 	}
 	
 	public String find(CharSequence input) {
 		Matcher matcher = pattern.matcher(input);
-		return matcher.find() ? matcher.group(getGroup()) : null;
+		return matcher.find() ? matcher.group(group) : null;
 	}
 }
