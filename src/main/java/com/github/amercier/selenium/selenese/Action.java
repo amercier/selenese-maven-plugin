@@ -3,15 +3,17 @@ package com.github.amercier.selenium.selenese;
 
 public enum Action {
 	
-	open(1),
-	type(2),
-	click(1),
-	pause(1),
 	assertLocation(1),
 	assertElementPresent(1),
 	assertElementNotPresent(1),
+	click(1),
+	echo(1),
+	getEval(1),
+	open(1),
+	pause(1),
 	select(2),
-	storeEval(2);
+	storeEval(2),
+	type(2);
 	
 	private final int argumentsCount;
 	

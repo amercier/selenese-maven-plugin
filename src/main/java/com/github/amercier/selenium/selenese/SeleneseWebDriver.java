@@ -77,13 +77,15 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		
 		try {
 			switch(command.getAction()) {
-				       case open                   : get(getAbsoluteURL(command.getArgument(0)));
-				break; case type                   : WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1));
-				break; case click                  : findElement(ElementLocator.parse(command.getArgument(0))).click();
-				break; case pause                  : pause(Long.parseLong(command.getArgument(0)));
-				break; case assertLocation         : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
-				break; case assertElementPresent   : Assert.assertNotNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
+				       case assertElementPresent   : Assert.assertNotNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
 				break; case assertElementNotPresent: Assert.assertNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can find element \"" + command.getArgument(0) + "\"");
+				break; case assertLocation         : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
+				break; case click                  : findElement(ElementLocator.parse(command.getArgument(0))).click();
+				break; case getEval                : executeScript(command.getArgument(0), new Object[0]);
+				break; case echo                   : System.out.println(executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
+				break; case open                   : get(getAbsoluteURL(command.getArgument(0)));
+				break; case pause                  : pause(Long.parseLong(command.getArgument(0)));
+				break; case type                   : WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1));
 				break; case select                 : findElement(ElementLocator.parse(command.getArgument(0))).findElement(OptionLocator.parse(command.getArgument(1))).click();
 				break; case storeEval              : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 			}
