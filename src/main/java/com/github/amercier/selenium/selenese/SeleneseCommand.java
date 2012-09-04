@@ -8,38 +8,35 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 
 public class SeleneseCommand {
 	
 	/**
-	 * Minimum command length
-	 */
-	private static final int COMMAND_LENGTH_MIN = 1;
-	
-	/**
-	 * 
+	 * Variable pattern: ${variable}
 	 */
 	public static final Pattern PATTERN_VARIABLE = Pattern.compile("\\$\\{([^\\}]+)\\}");
 	
-	protected String name;
+	protected Action action;
 	protected List<String> arguments;
 	protected Map<String, String> variables;
 	
-	public SeleneseCommand(String command) throws InvalidSeleneseCommandNameException {
-		this.setName(command);
+	public SeleneseCommand(Action action, String[] arguments) throws InvalidSeleneseCommandException {
+		this.setAction(action);
 		this.arguments = new LinkedList<String>();
 		this.variables = null;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public SeleneseCommand setName(String name) throws InvalidSeleneseCommandNameException {
-		if(name == null || name.length() < COMMAND_LENGTH_MIN) {
-			throw new InvalidSeleneseCommandNameException(name);
+		
+		if(arguments.length != action.getArgumentsCount()) {
+			throw new InvalidSeleneseCommandException(this, "Expecting " + action.getArgumentsCount() + " arguments, " + arguments.length + " given");
 		}
-		this.name = name;
+	}
+	
+	public Action getAction() {
+		return action;
+	}
+	
+	public SeleneseCommand setAction(Action action) {
+		this.action = action;
 		return this;
 	}
 	
@@ -88,7 +85,7 @@ public class SeleneseCommand {
 	
 	@Override
 	public String toString() {
-		return getName() + "(" + Arrays.toString(getArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
+		return getAction() + "(" + Arrays.toString(getArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
 	}
 	
 	/*

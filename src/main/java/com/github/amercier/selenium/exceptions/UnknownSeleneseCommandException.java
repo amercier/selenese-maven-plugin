@@ -1,15 +1,14 @@
 package com.github.amercier.selenium.exceptions;
 
-import com.github.amercier.selenium.selenese.SeleneseCommand;
 
 @SuppressWarnings("serial")
 public class UnknownSeleneseCommandException extends Exception {
 	
-	protected SeleneseCommand command;
+	protected String actionName;
 	
-	public UnknownSeleneseCommandException(SeleneseCommand command) {
-		super("Unknown Selenese command \"" + command.getName() + "\"");
-		this.command = command;
+	public UnknownSeleneseCommandException(String actionName) {
+		super("Unknown Selenese command \"" + actionName + "\"");
+		this.actionName = actionName;
 	}
 
 }

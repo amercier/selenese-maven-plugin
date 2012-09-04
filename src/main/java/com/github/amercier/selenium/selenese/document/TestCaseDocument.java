@@ -2,6 +2,8 @@ package com.github.amercier.selenium.selenese.document;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
@@ -9,7 +11,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
-import com.github.amercier.selenium.selenese.InvalidSeleneseCommandNameException;
+import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
+import com.github.amercier.selenium.selenese.Action;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.log.DefaultLog;
@@ -46,11 +49,12 @@ public class TestCaseDocument extends AbstractTestDocument {
 	 * @return Returns the test case
 	 * @throws InvalidSeleneseCommandException 
 	 * @throws DOMException 
+	 * @throws UnknownSeleneseCommandException 
 	 * @throws InvalidSeleneseCommandNameException 
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public SeleneseTestCase getTestCase() throws DOMException, InvalidSeleneseCommandNameException {
+	public SeleneseTestCase getTestCase() throws DOMException, UnknownSeleneseCommandException, InvalidSeleneseCommandException {
 		
 		NodeList tableRows = document.getElementsByTagName("tr");
 
@@ -63,17 +67,28 @@ public class TestCaseDocument extends AbstractTestDocument {
 			Element tableRow = (Element) tableRows.item(i);
 			NodeList rowCells = tableRow.getElementsByTagName("td");
 			
-			// Create the command
-			SeleneseCommand command = new SeleneseCommand(rowCells.item(0).getTextContent());
+			String actionName = rowCells.item(0).getTextContent();
 			
-			// Add the arguments
-			getLog().debug("Command " + command.getName() + ": found " + (rowCells.getLength() - 1) + " arguments");
+			// Arguments
+			List<String> arguments = new LinkedList<String>();
 			for (int j = 1; j < rowCells.getLength(); j++) {
 				if(!rowCells.item(j).getTextContent().trim().equals("")) {
-					command.addArgument(rowCells.item(j).getTextContent());
+					arguments.add(rowCells.item(j).getTextContent());
 				}
 			}
 			
+			// Create the command
+			Action action = null;
+			try {
+				action = Action.valueOf(actionName);
+			}
+			catch(IllegalArgumentException e) {
+				throw new UnknownSeleneseCommandException(actionName);
+			}
+			SeleneseCommand command = new SeleneseCommand(action, arguments.toArray(new String[0]));
+			getLog().debug("Found " + command);
+			
+			// Add the command to the test case
 			test.addCommand(command);
 		}
 		

@@ -91,24 +91,22 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		
 		command.setVariables(storage);
 		
-		String cmd = command.getName();
 		try {
-			     if("open"                .equals(cmd)) { get(getAbsoluteURL(command.getArgument(0))); }
-			else if("type"                .equals(cmd)) { WebElement e = findElement(command.getArgument(0)); e.clear(); e.sendKeys(command.getArgument(1)); }
-			else if("click"               .equals(cmd)) { findElement(command.getArgument(0)).click(); }
-			else if("pause"               .equals(cmd)) { pause(Long.parseLong(command.getArgument(0))); }
-			else if("assertLocation"      .equals(cmd)) { Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl()); }
-			else if("assertElementPresent".equals(cmd)) { Assert.assertNotNull(this.findElement(command.getArgument(0)), "Can not find element \"" + command.getArgument(0) + "\""); }
-			else if("storeEval"           .equals(cmd)) { storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0])); }
-			else {
-				throw new UnknownSeleneseCommandException(command);
+			switch(command.getAction()) {
+				       case open                : get(getAbsoluteURL(command.getArgument(0)));
+				break; case type                : WebElement e = findElement(command.getArgument(0)); e.clear(); e.sendKeys(command.getArgument(1));
+				break; case click               : findElement(command.getArgument(0)).click();
+				break; case pause               : pause(Long.parseLong(command.getArgument(0)));
+				break; case assertLocation      : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
+				break; case assertElementPresent: Assert.assertNotNull(this.findElement(command.getArgument(0)), "Can not find element \"" + command.getArgument(0) + "\"");
+				break; case storeEval           : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 			}
 		}
 		catch(InvalidSeleneseCommandArgumentException e) {
 			throw new InvalidSeleneseCommandException(command, e.argument);
 		}
 		catch (IllegalAccessException e) {
-			e.printStackTrace(); // Should not happen as we've set storage just before
+			e.printStackTrace(); // (no storage set) Should not happen as we've set storage just before
 		}
 	}
 }

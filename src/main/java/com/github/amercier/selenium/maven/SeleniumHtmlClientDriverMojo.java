@@ -13,8 +13,9 @@ import org.w3c.dom.DOMException;
 import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.ServerAddress;
+import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
+import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
-import com.github.amercier.selenium.selenese.InvalidSeleneseCommandNameException;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.document.TestCaseDocument;
@@ -161,11 +162,12 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				}
 			}
 		}
-		catch (DOMException e)                        { throw new MojoFailureException(e.getMessage(), e); }
-		catch (InvalidSeleneseCommandNameException e) { throw new MojoFailureException(e.getMessage(), e); }
-		catch (SAXException e)                        { throw new MojoFailureException(e.getMessage(), e); }
-		catch (IOException e)                         { throw new MojoFailureException(e.getMessage(), e); }
-		catch(RuntimeException e)                     { throw new MojoFailureException(e.getMessage(), e); }
+		catch (DOMException e)                    { throw new MojoFailureException(e.getMessage(), e); }
+		catch (SAXException e)                    { throw new MojoFailureException(e.getMessage(), e); }
+		catch (IOException e)                     { throw new MojoFailureException(e.getMessage(), e); }
+		catch (UnknownSeleneseCommandException e) { throw new MojoFailureException(e.getMessage(), e); }
+		catch (InvalidSeleneseCommandException e) { throw new MojoFailureException(e.getMessage(), e); }
+		catch (RuntimeException e)                { throw new MojoFailureException(e.getMessage(), e); }
 		
 		// Wait for all test runners to terminate
 		if(latch != null) {

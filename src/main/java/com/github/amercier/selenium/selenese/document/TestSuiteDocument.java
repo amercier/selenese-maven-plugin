@@ -9,7 +9,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
-import com.github.amercier.selenium.selenese.InvalidSeleneseCommandNameException;
+import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.log.DefaultLog;
 import com.github.amercier.selenium.selenese.log.Log;
@@ -47,7 +47,7 @@ public class TestSuiteDocument extends AbstractTestDocument {
 	 * @throws DOMException 
 	 * @throws InvalidSeleneseCommandNameException 
 	 */
-	public SeleneseTestSuite getTestSuite() throws SAXException, IOException, DOMException, InvalidSeleneseCommandNameException {
+	public SeleneseTestSuite getTestSuite() throws SAXException, IOException, DOMException, UnknownSeleneseCommandException, InvalidSeleneseCommandException {
 		
 		// Create the test suite object
 		SeleneseTestSuite suite = new SeleneseTestSuite(sourceFile.getName().replaceAll("\\.html$", ""));
