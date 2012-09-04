@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
@@ -77,21 +79,22 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		
 		try {
 			switch(command.getAction()) {
-				       case assertElementPresent   : Assert.assertNotNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
-				break; case assertElementNotPresent: Assert.assertNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can find element \"" + command.getArgument(0) + "\"");
-				break; case assertLocation         : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
-				break; case click                  : findElement(ElementLocator.parse(command.getArgument(0))).click();
-				break; case getEval                : executeScript(command.getArgument(0), new Object[0]);
-				break; case echo                   : System.out.println(executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
-				break; case open                   : get(getAbsoluteURL(command.getArgument(0)));
-				break; case pause                  : pause(Long.parseLong(command.getArgument(0)));
-				break; case type                   : WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1));
-				break; case select                 : findElement(ElementLocator.parse(command.getArgument(0))).findElement(OptionLocator.parse(command.getArgument(1))).click();
-				break; case storeEval              : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
+				       case assertElementPresent    : Assert.assertNotNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
+				break; case assertElementNotPresent : Assert.assertNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can find element \"" + command.getArgument(0) + "\"");
+				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
+				break; case click                   : findElement(ElementLocator.parse(command.getArgument(0))).click();
+				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
+				break; case echo                    : System.out.println(executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
+				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
+				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
+				break; case type                    : WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1));
+				break; case select                  : findElement(ElementLocator.parse(command.getArgument(0))).findElement(OptionLocator.parse(command.getArgument(1))).click();
+				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
+				break; case waitForElementNotPresent: final By by = ElementLocator.parse(command.getArgument(0)); (new WebDriverWait(this, 10)).until(new ExpectedCondition<WebElement>(){ public WebElement apply(WebDriver d) { return d.findElement(by);	}});
 			}
 		}
 		catch(InvalidSeleneseCommandArgumentException e) {
-			throw new InvalidSeleneseCommandException(command, e.argument);
+			throw new InvalidSeleneseCommandException(command, "argument " + e.argument + " is invalid");
 		}
 		catch (IllegalAccessException e) {
 			e.printStackTrace(); // (no storage set) Should not happen as we've set storage just before

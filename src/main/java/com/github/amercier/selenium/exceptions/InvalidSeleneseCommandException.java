@@ -12,8 +12,8 @@ public class InvalidSeleneseCommandException extends Exception {
 		this.command = command;
 	}
 
-	public InvalidSeleneseCommandException(SeleneseCommand command, String argument) {
-		super("Invalid Selenese command \"" + command + "\" (argument \"" + argument + "\" is invalid)");
+	public InvalidSeleneseCommandException(SeleneseCommand command, String cause) {
+		super("Invalid Selenese command \"" + command + "\": " + cause + ")");
 		this.command = command;
 	}
 }

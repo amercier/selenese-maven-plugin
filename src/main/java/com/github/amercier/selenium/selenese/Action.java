@@ -13,7 +13,8 @@ public enum Action {
 	pause(1),
 	select(2),
 	storeEval(2),
-	type(2);
+	type(2),
+	waitForElementNotPresent(1);
 	
 	private final int argumentsCount;
 	

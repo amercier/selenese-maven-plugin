@@ -25,14 +25,14 @@ public class SeleneseCommand {
 		this.setAction(action);
 		
 		this.arguments = new LinkedList<String>();
-		for(int i = 0 ; i < arguments.length ; i++) {
-			this.arguments.add(arguments[i]);
+		for(int i = 0 ; i < action.getArgumentsCount() ; i++) {
+			this.arguments.add(i >= arguments.length ? "" : arguments[i]);
 		}
 		
 		this.variables = null;
 		
-		if(arguments.length != action.getArgumentsCount()) {
-			throw new InvalidSeleneseCommandException(this, "Expecting " + action.getArgumentsCount() + " arguments, " + arguments.length + " given");
+		if(arguments.length > action.getArgumentsCount()) {
+			throw new InvalidSeleneseCommandException(this, "expecting " + action.getArgumentsCount() + " arguments, " + arguments.length + " given");
 		}
 	}
 	
