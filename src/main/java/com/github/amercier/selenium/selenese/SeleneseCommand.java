@@ -23,7 +23,12 @@ public class SeleneseCommand {
 	
 	public SeleneseCommand(Action action, String[] arguments) throws InvalidSeleneseCommandException {
 		this.setAction(action);
+		
 		this.arguments = new LinkedList<String>();
+		for(int i = 0 ; i < arguments.length ; i++) {
+			this.arguments.add(arguments[i]);
+		}
+		
 		this.variables = null;
 		
 		if(arguments.length != action.getArgumentsCount()) {
@@ -40,7 +45,7 @@ public class SeleneseCommand {
 		return this;
 	}
 	
-	protected String[] getArguments() {
+	protected String[] getRawArguments() {
 		return arguments.toArray(new String[0]);
 	}
 	
@@ -85,7 +90,7 @@ public class SeleneseCommand {
 	
 	@Override
 	public String toString() {
-		return getAction() + "(" + Arrays.toString(getArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
+		return getAction() + "(" + Arrays.toString(getRawArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
 	}
 	
 	/*

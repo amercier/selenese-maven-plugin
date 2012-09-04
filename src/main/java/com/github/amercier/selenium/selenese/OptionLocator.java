@@ -20,6 +20,7 @@ public enum OptionLocator {
 	REGEXP(Pattern.compile("^label=regexp:(.*)$")),
 	LABEL (Pattern.compile("^label=(.*)$")),
 	VALUE (Pattern.compile("^value=(.*)$")),
+	INDEX (Pattern.compile("^index=([0-9]*)$")),
 	ID    (Pattern.compile("^id=(.*)$"));
 	
 	private final Pattern pattern;
@@ -47,6 +48,7 @@ public enum OptionLocator {
 					case ID    : return By.xpath("option[@id=\"" + matched + "\"");
 					case LABEL : return By.xpath("option[text()=\"" + matched + "\"");
 					case VALUE : return By.xpath("option[@value=\"" + matched + "\"");
+					case INDEX : return By.xpath("option[" + matched + "]");
 					case REGEXP:
 						final Pattern pattern = Pattern.compile(matched);
 						return new By() {
