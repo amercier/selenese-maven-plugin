@@ -9,6 +9,8 @@ public enum Action {
 	pause(1),
 	assertLocation(1),
 	assertElementPresent(1),
+	assertElementNotPresent(1),
+	select(2),
 	storeEval(2);
 	
 	private final int argumentsCount;

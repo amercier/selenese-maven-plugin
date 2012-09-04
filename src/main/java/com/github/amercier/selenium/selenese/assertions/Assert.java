@@ -15,4 +15,10 @@ public class Assert {
 			throw new AssertionFailedException(message);
 		}
 	}
+	
+	public static void assertNull(Object value, String message) throws AssertionFailedException {
+		if(value != null) {
+			throw new AssertionFailedException(message);
+		}
+	}
 }

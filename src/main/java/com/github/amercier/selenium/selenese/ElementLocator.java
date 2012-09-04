@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
  * Element locators.
  * See {@link http://release.seleniumhq.org/selenium-core/1.0.1/reference.html#locators}
  */
-public enum Locator {
+public enum ElementLocator {
 	
 	NAME (Pattern.compile("^name=(.*)$")),
 	LINK (Pattern.compile("^link=(.*)$")),
@@ -17,7 +17,7 @@ public enum Locator {
 	
 	private final Pattern pattern;
 	
-	private Locator(Pattern pattern) {
+	private ElementLocator(Pattern pattern) {
 		this.pattern = pattern;
 	}
 	
