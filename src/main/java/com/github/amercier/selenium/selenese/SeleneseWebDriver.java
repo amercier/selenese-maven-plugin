@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -48,46 +47,6 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		return getBaseURL().toString().replaceAll("/$","") + "/" + relativeURL.replaceAll("^/","");
 	}
 	
-	protected By parseElementLocator(String seleneseSelector) throws InvalidSeleneseCommandArgumentException {
-		String matched;
-		for(ElementLocator locator : ElementLocator.values()) {
-			if((matched = locator.find(seleneseSelector)) != null) {
-				switch(locator) {
-					case ID   : return By.id(matched);
-					case NAME : return By.name(matched);
-					case XPATH: return By.xpath(matched);
-					case LINK : return By.linkText(matched);
-					case CSS  : return By.cssSelector(matched);
-				}
-			}
-		}
-		throw new InvalidSeleneseCommandArgumentException(seleneseSelector);
-	}
-	
-	protected By parseLabelLocator(String labelLocator) throws InvalidSeleneseCommandArgumentException {
-		return By.xpath("//*[text()=\"" + labelLocator.replace("label=", "") + "\"]");
-	}
-	
-	/*
-	protected WebElement findElement(WebElement scope, String seleneseSelector) throws InvalidSeleneseCommandArgumentException {
-		String matched;
-		for(ElementLocator locator : ElementLocator.values()) {
-			if((matched = locator.find(seleneseSelector)) != null) {
-				switch(locator) {
-					case ID   : return (scope == null ? this : scope).findElement(By.id(matched));
-					case NAME : return (scope == null ? this : scope).findElementByName(matched);
-					case XPATH: return (scope == null ? this : scope).findElementByXPath(matched);
-					case LINK : return (scope == null ? this : scope).findElementByLinkText(matched);
-					case CSS  : return (scope == null ? this : scope).findElementByCssSelector(matched);
-				}
-			}
-		}
-		throw new InvalidSeleneseCommandArgumentException(seleneseSelector);
-	}
-	
-	protected WebElement findElement(String seleneseSelector) throws InvalidSeleneseCommandArgumentException {
-	*/
-	
 	protected Pattern parsePattern(String selenesePattern) throws InvalidSeleneseCommandArgumentException {
 		Pattern result;
 		for(StringMatchPattern stringMatcher : StringMatchPattern.values()) {
@@ -119,13 +78,13 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		try {
 			switch(command.getAction()) {
 				       case open                   : get(getAbsoluteURL(command.getArgument(0)));
-				break; case type                   : WebElement e = findElement(parseElementLocator(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1));
-				break; case click                  : findElement(parseElementLocator(command.getArgument(0))).click();
+				break; case type                   : WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1));
+				break; case click                  : findElement(ElementLocator.parse(command.getArgument(0))).click();
 				break; case pause                  : pause(Long.parseLong(command.getArgument(0)));
 				break; case assertLocation         : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
-				break; case assertElementPresent   : Assert.assertNotNull(this.findElement(parseElementLocator(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
-				break; case assertElementNotPresent: Assert.assertNull(this.findElement(parseElementLocator(command.getArgument(0))), "Can find element \"" + command.getArgument(0) + "\"");
-				break; case select                 : findElement(parseElementLocator(command.getArgument(0))).findElement(parseLabelLocator(command.getArgument(1))).click();
+				break; case assertElementPresent   : Assert.assertNotNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
+				break; case assertElementNotPresent: Assert.assertNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can find element \"" + command.getArgument(0) + "\"");
+				break; case select                 : findElement(ElementLocator.parse(command.getArgument(0))).findElement(OptionLocator.parse(command.getArgument(1))).click();
 				break; case storeEval              : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 			}
 		}
