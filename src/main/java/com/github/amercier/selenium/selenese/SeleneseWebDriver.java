@@ -51,6 +51,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		String matched;
 		for(Locator locator : Locator.values()) {
 			if((matched = locator.find(seleneseSelector)) != null) {
+				System.out.println("findElement: " + seleneseSelector + " => " + locator.toString() + " ==> " + matched);
 				switch(locator) {
 					case ID   : return findElementById(matched);
 					case NAME : return findElementByName(matched);
@@ -89,12 +90,11 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	
 	public void execute(SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, AssertionFailedException {
 		
-		String cmd = command.getName();
+		command.setVariables(storage);
 		
+		String cmd = command.getName();
 		try {
-			if("open".equals(cmd)) {
-				get(getAbsoluteURL(command.getArgument(0)));
-			}
+			     if("open"                .equals(cmd)) { get(getAbsoluteURL(command.getArgument(0))); }
 			else if("type"                .equals(cmd)) { findElement(command.getArgument(0)).sendKeys(command.getArgument(1)); }
 			else if("click"               .equals(cmd)) { findElement(command.getArgument(0)).click(); }
 			else if("pause"               .equals(cmd)) { pause(Long.parseLong(command.getArgument(0))); }
@@ -107,6 +107,9 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		}
 		catch(InvalidSeleneseCommandArgumentException e) {
 			throw new InvalidSeleneseCommandException(command, e.argument);
+		}
+		catch (IllegalAccessException e) {
+			e.printStackTrace(); // Should not happen as we've set storage just before
 		}
 	}
 }

@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
  */
 public enum Locator {
 	
-	ID   (Pattern.compile("^(id(entifier)?=)?(.*)$")),
 	NAME (Pattern.compile("^name=(.*)$")),
-	XPATH(Pattern.compile("^(xpath=)?(//.*)$")),
 	LINK (Pattern.compile("^link=(.*)$")),
-	CSS  (Pattern.compile("^css=(.*)$"));
+	CSS  (Pattern.compile("^css=(.*)$")),
+	XPATH(Pattern.compile("^(xpath=)?(//.*)$")),
+	ID   (Pattern.compile("^(id(entifier)?=)?(.*)$")); // ID must be the last one as it matches everything
 	
 	private final Pattern pattern;
 	
