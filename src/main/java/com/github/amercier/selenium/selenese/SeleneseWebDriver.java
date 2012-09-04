@@ -1,7 +1,8 @@
 package com.github.amercier.selenium.selenese;
 
 import java.net.URL;
-import java.util.regex.Matcher;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.openqa.selenium.WebDriver;
@@ -20,25 +21,9 @@ import com.google.common.base.Predicate;
 public class SeleneseWebDriver extends RemoteWebDriver {
 	
 	/**
-	 * Element locators.
-	 * See {@link http://release.seleniumhq.org/selenium-core/1.0.1/reference.html#locators}
+	 * Storage to be used with storeEval and loadEval
 	 */
-	public static Pattern LOCATOR_IDENTIFIER = Pattern.compile("^id=(.*)$");
-	public static Pattern LOCATOR_ID         = Pattern.compile("^id=(.*)$");
-	public static Pattern LOCATOR_NAME       = Pattern.compile("^id=(.*)$");
-	public static Pattern LOCATOR_DOM        = Pattern.compile("^id=(.*)$");
-	public static Pattern LOCATOR_XPATH      = Pattern.compile("^id=(.*)$");
-	public static Pattern LOCATOR_LINK       = Pattern.compile("^id=(.*)$");
-	public static Pattern LOCATOR_CSS        = Pattern.compile("^id=(.*)$");
-	
-	/**
-	 * String-match Patterns.
-	 * See {@link http://release.seleniumhq.org/selenium-core/1.0.1/reference.html#patterns}
-	 */
-	public static Pattern PATTERN_REGEXP  = Pattern.compile("^regexp:(.*)$");
-	public static Pattern PATTERN_REGEXPI = Pattern.compile("^regexp:(.*)$/i");
-	public static Pattern PATTERN_EXACT   = Pattern.compile("^exact:(.*)$");
-	public static Pattern PATTERN_GLOB    = Pattern.compile("^glob:(.*)$");
+	protected Map<String,String> storage;
 	
 	public static long PAUSE_CHECK_INTERVAL = (long)1.0;
 	
@@ -47,6 +32,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	public SeleneseWebDriver(URL baseURL, URL remoteAddress, DesiredCapabilities desiredCapabilities) {
 		super(remoteAddress, desiredCapabilities);
 		setBaseURL(baseURL);
+		this.storage = new HashMap<String,String>();
 	}
 
 	public URL getBaseURL() {
@@ -62,13 +48,29 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	}
 	
 	protected WebElement findElement(String seleneseSelector) throws InvalidSeleneseCommandArgumentException {
-		Matcher matcher;
-		if((matcher = LOCATOR_ID.matcher(seleneseSelector)).matches()) {
-			return findElementById(matcher.group(1));
+		String matched;
+		for(Locator locator : Locator.values()) {
+			if((matched = locator.find(seleneseSelector)) != null) {
+				switch(locator) {
+					case ID   : return findElementById(matched);
+					case NAME : return findElementByName(matched);
+					case XPATH: return findElementByXPath(matched);
+					case LINK : return findElementByLinkText(matched);
+					case CSS  : return findElementByCssSelector(matched);
+				}
+			}
 		}
-		else {
-			throw new InvalidSeleneseCommandArgumentException(seleneseSelector);
+		throw new InvalidSeleneseCommandArgumentException(seleneseSelector);
+	}
+	
+	protected Pattern parsePattern(String selenesePattern) throws InvalidSeleneseCommandArgumentException {
+		Pattern result;
+		for(StringMatchPattern stringMatcher : StringMatchPattern.values()) {
+			if((result = stringMatcher.find(selenesePattern)) != null) {
+				return result;
+			}
 		}
+		throw new InvalidSeleneseCommandArgumentException(selenesePattern);
 	}
 	
 	protected long getTime() {
@@ -85,24 +87,6 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		});
 	}
 	
-	protected Pattern parsePattern(String selenesePattern) throws InvalidSeleneseCommandArgumentException {
-		Matcher matcher;
-		if((matcher = PATTERN_REGEXP.matcher(selenesePattern)).find()) {
-			return Pattern.compile(matcher.group(1));
-		}
-		else if((matcher = PATTERN_EXACT.matcher(selenesePattern)).find()) {
-			return Pattern.compile("^" + Pattern.quote(matcher.group(1)) + "$");
-		}
-		else if((matcher = PATTERN_GLOB.matcher(selenesePattern)).find()) {
-			// 1. Quote everything, including ? and *
-			// 2. Replace quoted \? with .? and \* with .*
-			return Pattern.compile("^" + Pattern.quote(matcher.group(1)).replaceAll("\\\\([\\?|\\*])", ".$1") + "$");
-		}
-		else {
-			throw new InvalidSeleneseCommandArgumentException(selenesePattern);
-		}
-	}
-	
 	public void execute(SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, AssertionFailedException {
 		
 		String cmd = command.getName();
@@ -111,10 +95,12 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 			if("open".equals(cmd)) {
 				get(getAbsoluteURL(command.getArgument(0)));
 			}
-			else if("type"          .equals(cmd)) { findElement(command.getArgument(0)).sendKeys(command.getArgument(1)); }
-			else if("click"         .equals(cmd)) { findElement(command.getArgument(0)).click(); }
-			else if("pause"         .equals(cmd)) { pause(Long.parseLong(command.getArgument(0))); }
-			else if("assertLocation".equals(cmd)) { Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl()); }
+			else if("type"                .equals(cmd)) { findElement(command.getArgument(0)).sendKeys(command.getArgument(1)); }
+			else if("click"               .equals(cmd)) { findElement(command.getArgument(0)).click(); }
+			else if("pause"               .equals(cmd)) { pause(Long.parseLong(command.getArgument(0))); }
+			else if("assertLocation"      .equals(cmd)) { Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl()); }
+			else if("assertElementPresent".equals(cmd)) { Assert.assertNotNull(this.findElement(command.getArgument(0)), "Can not find element \"" + command.getArgument(0) + "\""); }
+			else if("storeEval"           .equals(cmd)) { storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0])); }
 			else {
 				throw new UnknownSeleneseCommandException(command);
 			}

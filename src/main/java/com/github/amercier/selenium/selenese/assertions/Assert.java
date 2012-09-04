@@ -9,4 +9,10 @@ public class Assert {
 			throw new AssertionFailedException("\"" + target + "\" does not match the regular expression " + pattern.toString());
 		}
 	}
+	
+	public static void assertNotNull(Object value, String message) throws AssertionFailedException {
+		if(value == null) {
+			throw new AssertionFailedException(message);
+		}
+	}
 }
