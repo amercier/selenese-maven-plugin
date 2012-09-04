@@ -51,7 +51,6 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		String matched;
 		for(Locator locator : Locator.values()) {
 			if((matched = locator.find(seleneseSelector)) != null) {
-				System.out.println("findElement: " + seleneseSelector + " => " + locator.toString() + " ==> " + matched);
 				switch(locator) {
 					case ID   : return findElementById(matched);
 					case NAME : return findElementByName(matched);
@@ -95,7 +94,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		String cmd = command.getName();
 		try {
 			     if("open"                .equals(cmd)) { get(getAbsoluteURL(command.getArgument(0))); }
-			else if("type"                .equals(cmd)) { findElement(command.getArgument(0)).sendKeys(command.getArgument(1)); }
+			else if("type"                .equals(cmd)) { WebElement e = findElement(command.getArgument(0)); e.clear(); e.sendKeys(command.getArgument(1)); }
 			else if("click"               .equals(cmd)) { findElement(command.getArgument(0)).click(); }
 			else if("pause"               .equals(cmd)) { pause(Long.parseLong(command.getArgument(0))); }
 			else if("assertLocation"      .equals(cmd)) { Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl()); }
