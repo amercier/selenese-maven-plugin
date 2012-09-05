@@ -146,6 +146,8 @@ public class TestCaseRunner extends Thread {
 		getLog().debug(this + " Starting running test case (" + getTestCase().getCommands().length + " commands)");
 		if(!isInterrupted()) {
 			
+			SeleneseCommand currentCommand = null;
+			
 			SeleneseWebDriver driver = null;
 			try {
 				
@@ -158,19 +160,20 @@ public class TestCaseRunner extends Thread {
 					if(isInterrupted()) {
 						break;
 					}
+					currentCommand = command;
 					getLog().debug(this + " Running " + command);
 					//intepreter.execute(command);
 					driver.execute(command);
 				}
 			}
+			catch(AssertionFailedException e)        { raiseError(e); }
 			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
 			catch(MalformedURLException e)           { raiseFailure(e); }
-			catch(WebDriverException e)              { raiseFailure(e); }
-			catch(RuntimeException e)                { raiseFailure(e); }
+			catch(WebDriverException e)              { raiseFailure(e, currentCommand); }
 			catch(InvalidSeleneseCommandException e) { raiseFailure(e); }
 			catch(UnknownSeleneseCommandException e) { raiseFailure(e); }
 			catch(InterruptedException e)            { raiseFailure(e); }
-			catch(AssertionFailedException e)        { raiseError(e); }
+			catch(RuntimeException e)                { raiseFailure(e); }
 			finally {
 				// Close the driver unless its initialization failed
 				if(driver != null) {
@@ -211,6 +214,10 @@ public class TestCaseRunner extends Thread {
 	
 	protected void raiseFailure(Throwable failure) {
 		this.setFailure(new MojoExecutionException(failure.getMessage(), failure));
+	}
+	
+	protected void raiseFailure(Throwable failure, SeleneseCommand command) {
+		this.setFailure(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
 	}
 	
 	@Override
