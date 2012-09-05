@@ -82,6 +82,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				       case assertElementPresent    : Assert.assertNotNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can not find element \"" + command.getArgument(0) + "\"");
 				break; case assertElementNotPresent : Assert.assertNull(this.findElement(ElementLocator.parse(command.getArgument(0))), "Can find element \"" + command.getArgument(0) + "\"");
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
+				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), findElement(ElementLocator.parse(command.getArgument(0))).getText());
 				break; case click                   : findElement(ElementLocator.parse(command.getArgument(0))).click();
 				break; case check                   : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); if(e.getAttribute("checked") != null) e.click(); }
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);

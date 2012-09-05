@@ -6,6 +6,7 @@ public enum Action {
 	assertLocation(1),
 	assertElementPresent(1),
 	assertElementNotPresent(1),
+	assertText(2),
 	check(1),
 	click(1),
 	echo(1),
