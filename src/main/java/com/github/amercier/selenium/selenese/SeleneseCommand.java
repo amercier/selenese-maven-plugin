@@ -90,19 +90,4 @@ public class SeleneseCommand {
 	public String toString() {
 		return getAction() + "(" + Arrays.toString(getRawArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
 	}
-	
-	/*
-	public Command toCommand(SessionId sessionId) {
-		return new Command(sessionId, this.getName(), this.getArgumentsAsMap());
-	}
-	
-	protected Map<String,Object> getArgumentsAsMap() {
-		Map<String,Object> parameters = new HashMap<String,Object>();
-		String[] arguments = getArguments();
-		for(int i = 0 ; i < arguments.length ; i++) {
-			parameters.put("" + i, (Object)arguments[i]);
-		}
-		return parameters;
-	}
-	*/
 }

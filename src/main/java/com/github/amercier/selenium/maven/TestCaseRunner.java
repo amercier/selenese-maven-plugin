@@ -120,7 +120,9 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected void setFailure(Throwable failure) {
-		this.failure = failure;
+		if(this.failure == null) {
+			this.failure = failure;
+		}
 	}
 	
 	protected ObservableCountDownLatch<TestCaseRunner> getLatch() {
@@ -203,13 +205,11 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected void raiseError(Throwable error) {
-		getLog().debug(error);
 		this.setFailure(error);
 		
 	}
 	
 	protected void raiseFailure(Throwable failure) {
-		getLog().debug(failure);
 		this.setFailure(new MojoExecutionException(failure.getMessage(), failure));
 	}
 	
