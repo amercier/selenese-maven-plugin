@@ -24,6 +24,9 @@ public class SeleneseCommand {
 	public SeleneseCommand(Action action, String[] arguments) throws InvalidSeleneseCommandException {
 		this.setAction(action);
 		
+		/* To deal with optional arguments, we add all the given arguments, and
+		 * then we add empty arguments "" until action.getArgumentsCount() is reached
+		 */
 		this.arguments = new LinkedList<String>();
 		for(int i = 0 ; i < arguments.length || i < action.getArgumentsCount() ; i++) {
 			this.arguments.add(i >= arguments.length ? "" : arguments[i]);
