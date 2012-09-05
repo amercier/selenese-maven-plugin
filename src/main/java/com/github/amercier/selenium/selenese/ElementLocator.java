@@ -16,7 +16,7 @@ public enum ElementLocator {
 	NAME (Pattern.compile("^name=(.*)$")),
 	LINK (Pattern.compile("^link=(.*)$")),
 	CSS  (Pattern.compile("^css=(.*)$")),
-	XPATH(Pattern.compile("^(xpath=)?(//.*)$"), 2),
+	XPATH(Pattern.compile("^(xpath=)?(\\(?//.*)$"), 2),
 	ID   (Pattern.compile("^(id(entifier)?=)?(.*)$"), 3); // ID must be the last one as it matches everything
 	
 	private final Pattern pattern;
