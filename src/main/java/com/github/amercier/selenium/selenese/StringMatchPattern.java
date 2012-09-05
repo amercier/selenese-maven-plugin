@@ -12,7 +12,7 @@ public enum StringMatchPattern {
 	PATTERN_REGEXP (Pattern.compile("^regexp:(.*)$")),
 	PATTERN_REGEXPI(Pattern.compile("^regexp:(.*)$/i")),
 	PATTERN_GLOB   (Pattern.compile("^glob:(.*)$")),
-	PATTERN_EXACT  (Pattern.compile("^exact:(.*)$"));
+	PATTERN_EXACT  (Pattern.compile("^(exact:)?(.*)$"));
 	
 	private final Pattern pattern;
 	
