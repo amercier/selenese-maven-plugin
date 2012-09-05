@@ -25,7 +25,7 @@ public class SeleneseCommand {
 		this.setAction(action);
 		
 		this.arguments = new LinkedList<String>();
-		for(int i = 0 ; i < arguments.length && i < action.getArgumentsCount() ; i++) {
+		for(int i = 0 ; i < arguments.length || i < action.getArgumentsCount() ; i++) {
 			this.arguments.add(i >= arguments.length ? "" : arguments[i]);
 		}
 		
@@ -77,11 +77,6 @@ public class SeleneseCommand {
 		}
 		
 		return argument;
-	}
-	
-	public SeleneseCommand addArgument(String argument) {
-		this.arguments.add(argument);
-		return this;
 	}
 	
 	public void setVariables(Map<String,String> variables) {
