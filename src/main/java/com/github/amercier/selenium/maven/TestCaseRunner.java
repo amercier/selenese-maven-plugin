@@ -179,7 +179,7 @@ public class TestCaseRunner extends Thread {
 				if(driver != null) {
 					getLog().debug(this + " Closing driver session");
 					try {
-						driver.close();
+						driver.quit();
 					}
 					catch(RuntimeException e) { raiseFailure(e); }
 				}
