@@ -45,9 +45,9 @@ public enum OptionLocator {
 		for(OptionLocator locator : OptionLocator.values()) {
 			if((matched = locator.find(seleneseSelector)) != null) {
 				switch(locator) {
-					case ID    : return By.xpath("option[@id=\"" + matched + "\"");
-					case LABEL : return By.xpath("option[text()=\"" + matched + "\"");
-					case VALUE : return By.xpath("option[@value=\"" + matched + "\"");
+					case ID    : return By.xpath("option[@id=\"" + matched + "\"]");
+					case LABEL : return By.xpath("option[text()=\"" + matched + "\"]");
+					case VALUE : return By.xpath("option[@value=\"" + matched + "\"]");
 					case INDEX : return By.xpath("option[" + matched + "]");
 					case REGEXP:
 						final Pattern pattern = Pattern.compile(matched);
