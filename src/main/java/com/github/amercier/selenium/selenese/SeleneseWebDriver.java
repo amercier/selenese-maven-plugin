@@ -74,7 +74,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		});
 	}
 	
-	public void execute(SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException {
+	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException {
 		
 		command.setVariables(storage);
 		
@@ -87,13 +87,14 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case click                   : findElement(ElementLocator.parse(command.getArgument(0))).click();
 				break; case check                   : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); if(e.getAttribute("checked") == null) e.click(); }
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
-				break; case echo                    : System.out.println(executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
+				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
 				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
 				break; case type                    : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1)); }
 				break; case select                  : findElement(ElementLocator.parse(command.getArgument(0))).findElement(OptionLocator.parse(command.getArgument(1))).click();
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
-				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); (new WebDriverWait(this, 10)).until(new ExpectedCondition<WebElement>(){ public WebElement apply(WebDriver d) { return d.findElement(by); }}); }
+				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() > 0; }}); }
+				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
 			}
 		}
 		catch(InvalidSeleneseCommandArgumentException e) {
