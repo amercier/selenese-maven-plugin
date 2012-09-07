@@ -31,8 +31,8 @@ import com.github.amercier.selenium.thread.ObservableCountDownLatch;
  * Goal which sends Selenese HTML tests to be run by a remote or local Selenium
  * 2 Server/Grid Hub
  * 
- * @goal  test
- * @phase test
+ * @goal  integration-test
+ * @phase integration-test
  */
 public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	
