@@ -10,6 +10,7 @@ import org.xml.sax.SAXException;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
+import com.github.amercier.selenium.selenese.SeleneseTestCase;
 import com.github.amercier.selenium.selenese.SeleneseTestSuite;
 import com.github.amercier.selenium.selenese.log.DefaultLog;
 import com.github.amercier.selenium.selenese.log.Log;
@@ -63,17 +64,16 @@ public class TestSuiteDocument extends AbstractTestDocument {
 			Element link = (Element) cell.getElementsByTagName("a").item(0);
 			
 			// Add the test case
-			suite.addTestCase(
-					new TestCaseDocument(
-							new File(
-									sourceFile.getParent(),
-									link.getAttribute("href")
-								),
-							this.getLog()
-						)
-						.getTestCase()
-						.setName(link.getTextContent()) // update the name with the one found in the suite
-				);
+			SeleneseTestCase testCase = new TestCaseDocument(
+					new File(
+							sourceFile.getParent(),
+							link.getAttribute("href")
+						),
+					this.getLog()
+				).getTestCase();
+			testCase.setName(link.getTextContent());  // update the name with the one found in the suite
+			
+			suite.addTestCase(testCase);
 			
 			getLog().debug("Added " + link.getTextContent() + " successfully");
 		}

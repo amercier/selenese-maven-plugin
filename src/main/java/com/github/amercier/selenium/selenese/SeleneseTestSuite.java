@@ -3,16 +3,20 @@ package com.github.amercier.selenium.selenese;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SeleneseTestSuite {
+import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
 
-	protected String name;
+public class SeleneseTestSuite extends JUnitTest {
+
+	//protected String name;
 	protected List<SeleneseTestCase> testCases;
 	
 	public SeleneseTestSuite(String name) {
-		this.setName(name);
+		super(name);
+		//this.setName(name);
 		testCases = new LinkedList<SeleneseTestCase>();
 	}
 	
+	/*
 	public String getName() {
 		return name;
 	}
@@ -20,7 +24,7 @@ public class SeleneseTestSuite {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+	*/
 	public void addTestCase(SeleneseTestCase testCase) {
 		this.testCases.add(testCase);
 	}

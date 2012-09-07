@@ -51,7 +51,7 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * The test failure. If null, test has succeeded
 	 */
-	protected Throwable failure = null;
+	//protected Throwable failure = null;
 	
 	/**
 	 * Synchronization manager
@@ -107,6 +107,7 @@ public class TestCaseRunner extends Thread {
 		this.baseUrl = baseUrl;
 	}
 	
+	/*
 	public boolean hasSucceeded() {
 		return this.getFailure() == null;
 	}
@@ -123,6 +124,14 @@ public class TestCaseRunner extends Thread {
 		if(this.failure == null) {
 			this.failure = failure;
 		}
+	}
+	*/
+	protected void setError(Throwable error) {
+		this.getTestCase().setError(error);
+	}
+	
+	protected void setFailure(Throwable failure) {
+		this.getTestCase().setFailure(failure);
 	}
 	
 	protected ObservableCountDownLatch<TestCaseRunner> getLatch() {
@@ -169,7 +178,7 @@ public class TestCaseRunner extends Thread {
 			catch(AssertionFailedException e)        { raiseError(e); }
 			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
 			catch(MalformedURLException e)           { raiseFailure(e); }
-			catch(WebDriverException e)              { raiseFailure(e, currentCommand); }
+			catch(WebDriverException e)              { raiseError(e, currentCommand); }
 			catch(InvalidSeleneseCommandException e) { raiseFailure(e); }
 			catch(UnknownSeleneseCommandException e) { raiseFailure(e); }
 			catch(InterruptedException e)            { raiseFailure(e); }
@@ -208,16 +217,16 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected void raiseError(Throwable error) {
-		this.setFailure(error);
+		this.setError(error);
 		
+	}
+	
+	protected void raiseError(Throwable failure, SeleneseCommand command) {
+		this.setError(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {
 		this.setFailure(new MojoExecutionException(failure.getMessage(), failure));
-	}
-	
-	protected void raiseFailure(Throwable failure, SeleneseCommand command) {
-		this.setFailure(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
 	}
 	
 	@Override
