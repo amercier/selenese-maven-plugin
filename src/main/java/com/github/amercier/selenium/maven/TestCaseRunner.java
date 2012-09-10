@@ -61,7 +61,12 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * Log
 	 */
-	protected Log log; 
+	protected Log log;
+	
+	/**
+	 * JUnit Test Case
+	 */
+	protected junit.framework.TestCase jUnitTestCase;
 	
 	/**
 	 * Create a test case runner
@@ -73,6 +78,7 @@ public class TestCaseRunner extends Thread {
 		setBaseUrl(baseUrl);
 		setLatch(latch);
 		setLog(log);
+		setJUnitTestCase(new junit.framework.TestCase(toString()){});
 	}
 	
 	public ServerAddress getServer() {
@@ -105,6 +111,14 @@ public class TestCaseRunner extends Thread {
 	
 	public void setBaseUrl(URL baseUrl) {
 		this.baseUrl = baseUrl;
+	}
+	
+	public junit.framework.TestCase getJUnitTestCase() {
+		return jUnitTestCase;
+	}
+	
+	public void setJUnitTestCase(junit.framework.TestCase jUnitTestCase) {
+		this.jUnitTestCase = jUnitTestCase;
 	}
 	
 	/*

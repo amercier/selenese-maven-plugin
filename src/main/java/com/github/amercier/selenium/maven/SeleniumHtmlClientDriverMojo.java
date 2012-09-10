@@ -129,12 +129,12 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 			public void fireCountedDown(ObservableCountDownLatch<TestCaseRunner> observableCountDownLatch, TestCaseRunner terminated) {
 				SeleneseTestCase testCase = terminated.getTestCase();
 				if(testCase.hasFailed()) {
-					formatter.addFailure(testCase, testCase.getFailure());
+					formatter.addFailure(terminated.getJUnitTestCase(), testCase.getFailure());
 				}
 				else if(testCase.hasErrored()) {
-					formatter.addError(testCase, testCase.getError());
+					formatter.addError(terminated.getJUnitTestCase(), testCase.getError());
 				}
-				formatter.endTest(terminated.getTestCase());
+				formatter.endTest(terminated.getJUnitTestCase());
 			}
 		};
 		
@@ -189,8 +189,8 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
 					for(SeleneseTestCase testCase : suite.getTestCases()) {
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-						formatter.startTest(testCase);
 						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog());
+						formatter.startTest(testRunner.getJUnitTestCase());
 						testRunners.add(testRunner);
 						testRunner.start();
 						suite.setCounts(suite.runCount() + 1, suite.failureCount(), suite.errorCount());
