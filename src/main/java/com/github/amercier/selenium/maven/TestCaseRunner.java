@@ -191,7 +191,7 @@ public class TestCaseRunner extends Thread {
 			}
 			
 			// Driver initialization
-			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
+			catch(CapabilitiesNotFoundException e)   { raiseError(e); }
 			catch(MalformedURLException e)           { raiseFailure(e); }
 			
 			// Command execution
@@ -235,6 +235,10 @@ public class TestCaseRunner extends Thread {
 		catch(WebDriverException e) {
 			throw new CapabilitiesNotFoundException(getCapability(), getServer());
 		}
+	}
+	
+	protected void raiseError(Throwable failure) {
+		this.setError(new MojoExecutionException(failure.getMessage(), failure));
 	}
 	
 	protected void raiseError(Throwable failure, SeleneseCommand command) {
