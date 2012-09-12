@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.openqa.selenium.WebDriverException;
 
@@ -140,11 +141,11 @@ public class TestCaseRunner extends Thread {
 		}
 	}
 	*/
-	protected void setError(Throwable error) {
+	protected void setError(MojoExecutionException error) {
 		this.getTestCase().setError(error);
 	}
 	
-	protected void setFailure(Throwable failure) {
+	protected void setFailure(MojoFailureException failure) {
 		this.getTestCase().setFailure(failure);
 	}
 	
@@ -185,18 +186,24 @@ public class TestCaseRunner extends Thread {
 					}
 					currentCommand = command;
 					getLog().debug(this + " Running " + command);
-					//intepreter.execute(command);
 					driver.execute(command);
 				}
 			}
-			catch(AssertionFailedException e)        { raiseError(e); }
+			
+			// Driver initialization
 			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
 			catch(MalformedURLException e)           { raiseFailure(e); }
-			catch(WebDriverException e)              { raiseError(e, currentCommand); }
+			
+			// Command execution
+			catch(AssertionFailedException e)        { raiseError(e, currentCommand); }
 			catch(InvalidSeleneseCommandException e) { raiseFailure(e); }
 			catch(UnknownSeleneseCommandException e) { raiseFailure(e); }
 			catch(InterruptedException e)            { raiseFailure(e); }
+			catch(WebDriverException e)              { raiseError(e, currentCommand); }
+			
+			// Other
 			catch(RuntimeException e)                { raiseFailure(e); }
+			
 			finally {
 				// Close the driver unless its initialization failed
 				if(driver != null) {
@@ -230,17 +237,12 @@ public class TestCaseRunner extends Thread {
 		}
 	}
 	
-	protected void raiseError(Throwable error) {
-		this.setError(error);
-		
-	}
-	
 	protected void raiseError(Throwable failure, SeleneseCommand command) {
 		this.setError(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {
-		this.setFailure(new MojoExecutionException(failure.getMessage(), failure));
+		this.setFailure(new MojoFailureException(failure.getMessage(), failure));
 	}
 	
 	@Override
