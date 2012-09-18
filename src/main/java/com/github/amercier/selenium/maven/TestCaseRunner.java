@@ -50,11 +50,6 @@ public class TestCaseRunner extends Thread {
 	protected URL baseUrl;
 	
 	/**
-	 * The test failure. If null, test has succeeded
-	 */
-	//protected Throwable failure = null;
-	
-	/**
 	 * Synchronization manager
 	 */
 	protected ObservableCountDownLatch<TestCaseRunner> latch;
@@ -122,25 +117,6 @@ public class TestCaseRunner extends Thread {
 		this.jUnitTestCase = jUnitTestCase;
 	}
 	
-	/*
-	public boolean hasSucceeded() {
-		return this.getFailure() == null;
-	}
-	
-	public boolean hasFailed() {
-		return this.getFailure() != null;
-	}
-	
-	public Throwable getFailure() {
-		return failure;
-	}
-	
-	protected void setFailure(Throwable failure) {
-		if(this.failure == null) {
-			this.failure = failure;
-		}
-	}
-	*/
 	protected void setError(MojoExecutionException error) {
 		this.getTestCase().setError(error);
 	}

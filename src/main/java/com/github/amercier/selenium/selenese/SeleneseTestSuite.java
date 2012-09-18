@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
 
-public class SeleneseTestSuite extends JUnitTest {
+public class SeleneseTestSuite extends JUnitTest { // TODO Move dependency with JUnitTest
 
 	//protected String name;
 	protected List<SeleneseTestCase> testCases;

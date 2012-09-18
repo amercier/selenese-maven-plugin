@@ -8,7 +8,7 @@ import java.util.List;
  * A test case is an object having a name and a lavel, and containing a list of
  * commands
  */
-public class SeleneseTestCase /*extends TestCase*/ {
+public class SeleneseTestCase {
 
 	protected String name;
 	protected List<SeleneseCommand> commands;
@@ -17,7 +17,6 @@ public class SeleneseTestCase /*extends TestCase*/ {
 	
 	public SeleneseTestCase(String name) {
 		this.setName(name);
-		//super(name);
 		this.commands = new LinkedList<SeleneseCommand>();
 	}
 	
