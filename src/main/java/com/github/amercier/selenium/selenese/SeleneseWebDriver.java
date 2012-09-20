@@ -61,17 +61,23 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	}
 	
 	protected long getTime() {
-		return (Long) SeleneseWebDriver.this.executeScript("return new Date().getTime()", new Object[0]);
+		return (Long)executeScript("return new Date().getTime()", new Object[0]);
 	}
 	
 	protected void pause(final long milliseconds) {
 		final long startTime = getTime();
+		//System.out.println("Waiting " + milliseconds + "ms...");
 		new WebDriverWait(this, (long)(milliseconds + 1.0)).until(new Predicate<WebDriver>() {
 			public boolean apply(WebDriver input) {
 				SeleneseWebDriver driver = (SeleneseWebDriver)input;
-				return driver.getTime() >= startTime + milliseconds;
+				long time = driver.getTime();
+				//if(time < startTime + milliseconds) {
+				//	System.out.println((startTime + milliseconds - time) + "ms to go");
+				//}
+				return time >= startTime + milliseconds;
 			}
 		});
+		//System.out.println("Done !");
 	}
 	
 	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException {
