@@ -7,6 +7,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.remote.HttpCommandExecutor;
 
 import com.github.amercier.selenium.ServerAddress;
 import com.github.amercier.selenium.exceptions.CapabilitiesNotFoundException;
@@ -153,7 +154,7 @@ public class TestCaseRunner extends Thread {
 				
 				// Driver & interpreter initialization
 				driver = initWebDriver();
-				getLog().info(this + " Starting");
+				getLog().info(this + " Starting on " + ((HttpCommandExecutor)driver.getCommandExecutor()).getAddressOfRemoteServer());
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
