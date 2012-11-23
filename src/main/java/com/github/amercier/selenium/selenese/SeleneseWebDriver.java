@@ -9,6 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
@@ -92,6 +93,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), findElement(ElementLocator.parse(command.getArgument(0))).getText());
 				break; case click                   : findElement(ElementLocator.parse(command.getArgument(0))).click();
 				break; case check                   : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); if(e.getAttribute("checked") == null) e.click(); }
+				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( findElement(ElementLocator.parse(command.getArgument(0))), findElement(ElementLocator.parse(command.getArgument(1))) );
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
 				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));

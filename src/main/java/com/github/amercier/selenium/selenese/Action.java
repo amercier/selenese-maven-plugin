@@ -9,6 +9,7 @@ public enum Action {
 	assertText(2),
 	check(1),
 	click(1),
+	dragAndDropToObject(2),
 	echo(1),
 	getEval(1),
 	open(1),
