@@ -62,6 +62,13 @@
 			<version>2.25.0</version>
 		</dependency>
 		
+		<!-- JSON : Ex: org.json.JSONObject -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+		</dependency>
+		
 	</dependencies>
 	
 	<repositories>

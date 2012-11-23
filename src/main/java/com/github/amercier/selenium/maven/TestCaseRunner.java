@@ -1,13 +1,16 @@
 package com.github.amercier.selenium.maven;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
+import org.json.JSONObject;
 import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.remote.HttpCommandExecutor;
 
 import com.github.amercier.selenium.ServerAddress;
 import com.github.amercier.selenium.exceptions.CapabilitiesNotFoundException;
@@ -29,6 +32,11 @@ public class TestCaseRunner extends Thread {
 	 * Remote server path
 	 */
 	public static String REMOTE_SERVER_PATH = "/wd/hub";
+
+	/**
+	 * Remote session path
+	 */
+	public static String REMOTE_SESSION_PATH = "/grid/api/testsession?session=";
 	
 	/**
 	 * The remote server / grid hub address
@@ -154,7 +162,7 @@ public class TestCaseRunner extends Thread {
 				
 				// Driver & interpreter initialization
 				driver = initWebDriver();
-				getLog().info(this + " Starting on " + ((HttpCommandExecutor)driver.getCommandExecutor()).getAddressOfRemoteServer());
+				getLog().info(this + " Starting on " + getNodeName(driver));
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
@@ -211,6 +219,30 @@ public class TestCaseRunner extends Thread {
 		}
 		catch(WebDriverException e) {
 			throw new CapabilitiesNotFoundException(getCapability(), getServer());
+		}
+	}
+	
+	public String getNodeName(SeleneseWebDriver driver) {
+		try {
+			URL url = new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SESSION_PATH + driver.getSessionId().toString());
+			URLConnection connection = url.openConnection();
+			BufferedReader buffer = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String rawResponse = "",
+			       rawResponseLine;
+			while ((rawResponseLine = buffer.readLine()) != null) {
+				rawResponse += (rawResponse == "" ? "" : "\n") + rawResponseLine;
+			}
+			buffer.close();
+			JSONObject response = new JSONObject(rawResponse);
+			if(response.getBoolean("success")) {
+				return response.getString("proxyId").replaceAll("^http:\\/\\/(.*):[0-9]+$", "$1");
+			}
+			else {
+				return response.getString("msg");
+			}
+		}
+		catch(Exception e) {
+			return "Error: " + e.getMessage();
 		}
 	}
 	
