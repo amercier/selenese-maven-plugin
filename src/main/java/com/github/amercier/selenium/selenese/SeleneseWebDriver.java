@@ -13,6 +13,7 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
@@ -99,7 +100,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
 				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
 				break; case type                    : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1)); }
-				break; case select                  : findElement(ElementLocator.parse(command.getArgument(0))).findElement(OptionLocator.parse(command.getArgument(1))).click();
+				break; case select                  : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); new Select(e).selectByValue( e.findElement(OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() > 0; }}); }
 				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
