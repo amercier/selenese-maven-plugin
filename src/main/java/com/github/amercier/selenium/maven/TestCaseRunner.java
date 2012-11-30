@@ -5,11 +5,15 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
+
+import net.jsourcerer.webdriver.jserrorcollector.JavaScriptError;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 
 import com.github.amercier.selenium.ServerAddress;
@@ -180,11 +184,11 @@ public class TestCaseRunner extends Thread {
 			catch(MalformedURLException e)           { raiseFailure(e); }
 			
 			// Command execution
-			catch(AssertionFailedException e)        { raiseError(e, currentCommand); }
+			catch(AssertionFailedException e)        { raiseError(e, currentCommand, driver); }
 			catch(InvalidSeleneseCommandException e) { raiseFailure(e); }
 			catch(UnknownSeleneseCommandException e) { raiseFailure(e); }
 			catch(InterruptedException e)            { raiseFailure(e); }
-			catch(WebDriverException e)              { raiseError(e, currentCommand); }
+			catch(WebDriverException e)              { raiseError(e, currentCommand, driver); }
 			
 			// Other
 			catch(RuntimeException e)                { raiseFailure(e); }
@@ -250,8 +254,21 @@ public class TestCaseRunner extends Thread {
 		this.setError(new MojoExecutionException(failure.getMessage(), failure));
 	}
 	
-	protected void raiseError(Throwable failure, SeleneseCommand command) {
-		this.setError(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
+	protected void raiseError(Throwable failure, SeleneseCommand command, WebDriver driver) {
+		
+		// Add a Javascript errors stacktrace
+		String stacktrace = "";
+		if(failure instanceof AssertionFailedException) {
+			List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
+			if(jsErrors.isEmpty()) {
+				stacktrace = "\nNo JavaScript errors";
+			}
+			else {
+				stacktrace = jsErrors.toString();
+			}
+		}
+		
+		this.setError(new MojoExecutionException(command + ": " + failure.getMessage() + stacktrace, failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {
