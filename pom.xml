@@ -74,13 +74,14 @@
 			<groupId>net.jsourcerer.webdriver</groupId>
 			<artifactId>JSErrorCollector</artifactId>
 			<version>0.4</version>
-			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 		
 	</dependencies>
 	
+	<!-- Custom repositories
+	======================================================================== -->
 	<repositories>
+	
 		<!-- OpenQA - needed by org.openqa.selenium.client-drivers -->
 		<repository>
 			<id>openqa-releases</id>
@@ -91,27 +92,13 @@
 			<url>http://nexus.openqa.org/content/repositories/snapshots</url>
 		</repository>
 		
-		<!-- In-project repository -->
+		<!-- A. Mercier personal repo -->
 		<repository>
-			<id>repo</id>
-			<releases>
-				<enabled>true</enabled>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<url>file://${project.basedir}/repo</url>
+			<id>amercier-snapshots</id>
+			<url>http://amercier.github.com/amercier-mvn-repo/snapshots</url>
 		</repository>
 		
 	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>onejar-maven-plugin.googlecode.com</id>
-			<url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-		</pluginRepository>
-	</pluginRepositories>
 	
 	<!-- Distribution management
 	======================================================================== -->
@@ -178,47 +165,6 @@
 				</executions>
 			</plugin>
 			
-			<!-- Inclusion of in-project repository JAR files -->
-			<!-- 
-			<plugin>
-				<groupId>org.dstovall</groupId>
-				<artifactId>onejar-maven-plugin</artifactId>
-				<version>1.4.4</version>
-				<executions>
-					<execution>
-						<configuration>
-							<attachToBuild>true</attachToBuild>
-							<classifier></classifier>
-						</configuration>
-						<goals>
-							<goal>one-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			 -->
-			<plugin>
-		
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4</version>
-				<executions>
-					<execution>
-						<id>package-all</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<descriptors>
-								<descriptor>src/main/assembly/include-local-repository.xml</descriptor>
-							</descriptors>
-							<appendAssemblyId>false</appendAssemblyId>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 		</plugins>
 
 
