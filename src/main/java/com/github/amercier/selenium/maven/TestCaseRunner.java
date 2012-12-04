@@ -194,6 +194,19 @@ public class TestCaseRunner extends Thread {
 			catch(RuntimeException e)                { raiseFailure(e); }
 			
 			finally {
+				
+				// Print Javascript stacktrace, if any
+				List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
+				if(jsErrors.isEmpty()) {
+					getLog().debug(this + " No JavaScript errors found");
+				}
+				else {
+					getLog().error(this + " Found " + jsErrors.size() + " Javascript error" + (jsErrors.size() > 1 ? "s" : "") + ":");
+					for(JavaScriptError jsError : jsErrors) {
+						getLog().error(this + "     - " + jsError);
+					}
+				}
+				
 				// Close the driver unless its initialization failed
 				if(driver != null) {
 					getLog().debug(this + " Closing driver session");
@@ -255,20 +268,7 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected void raiseError(Throwable failure, SeleneseCommand command, WebDriver driver) {
-		
-		// Add a Javascript errors stacktrace
-		String stacktrace = "";
-		if(failure instanceof AssertionFailedException) {
-			List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
-			if(jsErrors.isEmpty()) {
-				stacktrace = "\nNo JavaScript errors";
-			}
-			else {
-				stacktrace = jsErrors.toString();
-			}
-		}
-		
-		this.setError(new MojoExecutionException(command + ": " + failure.getMessage() + stacktrace, failure));
+		this.setError(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {
