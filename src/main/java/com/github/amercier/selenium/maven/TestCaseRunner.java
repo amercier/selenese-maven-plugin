@@ -196,15 +196,20 @@ public class TestCaseRunner extends Thread {
 			finally {
 				
 				// Print Javascript stacktrace, if any
-				List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
-				if(jsErrors.isEmpty()) {
-					getLog().debug(this + " No JavaScript errors found");
-				}
-				else {
-					getLog().error(this + " Found " + jsErrors.size() + " Javascript error" + (jsErrors.size() > 1 ? "s" : "") + ":");
-					for(JavaScriptError jsError : jsErrors) {
-						getLog().error(this + "     - " + jsError);
+				try {
+					List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
+					if(jsErrors.isEmpty()) {
+						getLog().debug(this + " No JavaScript errors found");
 					}
+					else {
+						getLog().error(this + " Found " + jsErrors.size() + " Javascript error" + (jsErrors.size() > 1 ? "s" : "") + ":");
+						for(JavaScriptError jsError : jsErrors) {
+							getLog().error(this + "     - " + jsError);
+						}
+					}
+				}
+				catch(Exception e) {
+					getLog().error(this + " Error while reading Javascript errors: " + e.getMessage());
 				}
 				
 				// Close the driver unless its initialization failed
