@@ -5,9 +5,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
-
-import net.jsourcerer.webdriver.jserrorcollector.JavaScriptError;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -196,7 +193,7 @@ public class TestCaseRunner extends Thread {
 			finally {
 				
 				// Print Javascript stacktrace, if any
-				try {
+				/* try {
 					List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
 					if(jsErrors.isEmpty()) {
 						getLog().debug(this + " No JavaScript errors found");
@@ -210,7 +207,7 @@ public class TestCaseRunner extends Thread {
 				}
 				catch(Exception e) {
 					getLog().error(this + " Error while reading Javascript errors: " + e.getMessage());
-				}
+				}*/
 				
 				// Close the driver unless its initialization failed
 				if(driver != null) {

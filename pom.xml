@@ -70,11 +70,11 @@
 		</dependency>
 		
 		<!-- JSErrorCollector : Ex: net.jsourcerer.webdriver.jserrorcollector.JavaScriptError -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>net.jsourcerer.webdriver</groupId>
 			<artifactId>JSErrorCollector</artifactId>
 			<version>0.4</version>
-		</dependency>
+		</dependency> -->
 		
 	</dependencies>
 	
