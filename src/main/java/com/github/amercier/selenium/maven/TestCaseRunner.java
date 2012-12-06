@@ -270,7 +270,7 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected void raiseError(Throwable failure, SeleneseCommand command, WebDriver driver) {
-		this.setError(new MojoExecutionException(command + ": " + failure.getMessage(), failure));
+		this.setError(new MojoExecutionException(command + ": " + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()), failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {

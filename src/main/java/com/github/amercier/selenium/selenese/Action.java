@@ -18,7 +18,9 @@ public enum Action {
 	storeEval(2),
 	type(2),
 	waitForElementNotPresent(1),
-	waitForElementPresent(1);
+	waitForElementPresent(1),
+	waitForEval(2),
+	waitForVisible(1);
 	
 	private final int argumentsCount;
 	

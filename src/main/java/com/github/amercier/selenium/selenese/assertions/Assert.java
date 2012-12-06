@@ -27,4 +27,10 @@ public class Assert {
 			throw new AssertionFailedException(message);
 		}
 	}
+
+	public static void assertEqual(String actual, String expected, String message) throws AssertionFailedException {
+		if(!actual.equals(expected)) {
+			throw new AssertionFailedException(message);
+		}
+	}
 }
