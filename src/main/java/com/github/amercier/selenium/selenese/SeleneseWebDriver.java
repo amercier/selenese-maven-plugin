@@ -104,7 +104,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() > 0; }}); }
 				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
-				break; case waitForEval             : String result = "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]); Assert.assertEqual(result, command.getArgument(1), "Expression \"" + command.getArgument(0) + "\" returned \"" + result + "\" while \"" + command.getArgument(1) + "\" was expected");
+				break; case waitForEval             : { final String script = command.getArgument(0); final String expected = command.getArgument(1); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return ("" + executeScript("return (" + script + ")", new Object[0])).equals(expected); }}); }
 				break; case waitForVisible          : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, 20 * 60).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { for(WebElement e : d.findElements(by)) { if(e.isDisplayed()) return true; }; return false; }}); }
 			}
 		}
