@@ -39,6 +39,8 @@ public class TestCaseRunner extends Thread {
 	 */
 	public static String REMOTE_SESSION_PATH = "/grid/api/testsession?session=";
 	
+	public static int CLOSE_RETRIES = 10;
+	
 	/**
 	 * The remote server / grid hub address
 	 */
@@ -154,6 +156,9 @@ public class TestCaseRunner extends Thread {
 	@Override
 	public void run() {
 		getLog().debug(this + " Starting running test case (" + getTestCase().getCommands().length + " commands)");
+		
+		boolean closed = false;
+		
 		if(!isInterrupted()) {
 			
 			SeleneseCommand currentCommand = null;
@@ -212,20 +217,33 @@ public class TestCaseRunner extends Thread {
 				// Close the driver unless its initialization failed
 				if(driver != null) {
 					getLog().debug(this + " Closing driver session");
-					try {
-						driver.quit();
+					
+					for(int retries = 0 ; !closed && retries < CLOSE_RETRIES ; retries++) {
+						try {
+							driver.quit();
+							closed = true;
+						}
+						catch(RuntimeException e) {} // do nothing as we throw an Exception later
 					}
-					catch(RuntimeException e) { raiseFailure(e); }
+				}
+				else {
+					closed = true;
 				}
 			}
 		}
 		
 		getLog().debug(this + " Finished running test case");
 		
+		// Free the latch
 		try {
 			latch.countDown(this);
 		}
 		catch(RuntimeException e) { raiseFailure(e); }
+		
+		// Raise a failure if the driver hasn't been closed properly
+		if(!closed) {
+			raiseFailure(new RuntimeException("Failed to close WebDriver session after " + CLOSE_RETRIES + " attempts"));
+		}
 	}
 	
 	protected URL getServerURL() throws MalformedURLException {
