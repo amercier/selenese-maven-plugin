@@ -242,7 +242,7 @@ public class TestCaseRunner extends Thread {
 		
 		// Raise a failure if the driver hasn't been closed properly
 		if(!closed) {
-			raiseFailure(new RuntimeException("Failed to close WebDriver session after " + CLOSE_RETRIES + " attempts"));
+			raiseFailure(new RuntimeException(this + ": failed to close WebDriver session after " + CLOSE_RETRIES + " attempts"));
 		}
 	}
 	

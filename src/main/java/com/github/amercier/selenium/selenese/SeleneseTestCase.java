@@ -43,7 +43,9 @@ public class SeleneseTestCase {
 	}
 
 	public void setError(Throwable error) {
-		this.error = error;
+		if(this.error == null) {
+			this.error = error;
+		}
 	}
 	
 	public Throwable getError() {
@@ -55,7 +57,9 @@ public class SeleneseTestCase {
 	}
 	
 	public void setFailure(Throwable failure) {
-		this.failure = failure;
+		if(this.failure == null) {
+			this.failure = failure;
+		}
 	}
 	
 	public Throwable getFailure() {

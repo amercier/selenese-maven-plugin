@@ -13,7 +13,6 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -101,7 +100,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
 				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
 				break; case waitForEval             : { final String script = command.getArgument(0); final String expected = command.getArgument(1); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return ("" + executeScript("return (" + script + ")", new Object[0])).equals(expected); }}); }
-				break; case waitForVisible          : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(ExpectedConditions.visibilityOfElementLocated(by)); }
+				break; case waitForVisible          : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { for(WebElement e : d.findElements(by)) if(e.isDisplayed()) return true; return false; }}); }
 			}
 		}
 		catch(InvalidSeleneseCommandArgumentException e) {
