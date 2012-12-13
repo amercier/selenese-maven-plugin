@@ -33,4 +33,16 @@ public class Assert {
 			throw new AssertionFailedException(message);
 		}
 	}
+
+	public static void assertNotEqual(String actual, String unexpected, String message) throws AssertionFailedException {
+		if(actual.equals(unexpected)) {
+			throw new AssertionFailedException(message);
+		}
+	}
+
+	public static void assertNotEqual(int actual, int unexpected, String message) throws AssertionFailedException {
+		if(actual == unexpected) {
+			throw new AssertionFailedException(message);
+		}
+	}
 }
