@@ -252,7 +252,13 @@ public class TestCaseRunner extends Thread {
 	
 	protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
 		try {
-			return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities());
+			final Log log = getLog();
+			return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
+				public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
+				public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
+				public void error(String message) { log.error(TestCaseRunner.this + " " + message); }
+				public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
+			});
 		}
 		catch(WebDriverException e) {
 			throw new CapabilitiesNotFoundException(getCapability(), getServer());

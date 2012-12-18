@@ -25,9 +25,11 @@ import com.github.amercier.selenium.exceptions.TooManyElementsFoundException;
 import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.selenese.assertions.Assert;
 import com.github.amercier.selenium.selenese.assertions.AssertionFailedException;
+import com.github.amercier.selenium.selenese.log.Log;
+import com.github.amercier.selenium.selenese.log.Loggable;
 import com.google.common.base.Predicate;
 
-public class SeleneseWebDriver extends RemoteWebDriver {
+public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	
 	/**
 	 * Storage to be used with storeEval and loadEval
@@ -38,10 +40,13 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	
 	protected URL baseURL;
 	
-	public SeleneseWebDriver(URL baseURL, URL remoteAddress, DesiredCapabilities desiredCapabilities) {
+	protected Log log;
+	
+	public SeleneseWebDriver(URL baseURL, URL remoteAddress, DesiredCapabilities desiredCapabilities, Log log) {
 		super(remoteAddress, desiredCapabilities);
 		setBaseURL(baseURL);
 		this.storage = new HashMap<String,String>();
+		setLog(log);
 	}
 
 	public URL getBaseURL() {
@@ -50,6 +55,14 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 	
 	protected void setBaseURL(URL remoteAddress) {
 		this.baseURL = remoteAddress;
+	}
+	
+	public Log getLog() {
+		return log;
+	}
+	
+	public void setLog(Log log) {
+		this.log = log;
 	}
 	
 	protected String getAbsoluteURL(String relativeURL) {
@@ -105,7 +118,7 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		}
 		
 		if(elements.size() > 1) {
-			System.err.println("Warning: found " + elements.size() + " elements matching " + by);
+			getLog().warn("Warning: found " + elements.size() + " elements matching " + by);
 		}
 		return elements;
 	}
@@ -124,8 +137,8 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case assertElementNotPresent : Assert.assertEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Element \"" + command.getArgument(0) + "\" is present");
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
 				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), getElement(ElementLocator.parse(command.getArgument(0))).getText());
-				break; case click                   : getElement(ElementLocator.parse(command.getArgument(0))).click();
-				break; case check                   : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.getAttribute("checked") == null) e.click(); }
+				break; case click                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) e.click();
+				break; case check                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.getAttribute("checked") == null) e.click();
 				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( getElement(ElementLocator.parse(command.getArgument(0))), getElement(ElementLocator.parse(command.getArgument(1))) ).perform();
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
 				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
