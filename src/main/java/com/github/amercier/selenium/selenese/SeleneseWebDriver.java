@@ -81,21 +81,37 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		});
 	}
 	
-	protected WebElement getElement(SearchContext context, By locator) throws ElementNotFoundException, TooManyElementsFoundException {
-		List<WebElement> elements = locator.findElements(context);
+	protected WebElement getElement(SearchContext context, By by) throws ElementNotFoundException, TooManyElementsFoundException {
+		List<WebElement> elements = by.findElements(context);
 		if(elements.size() == 0) {
-			throw new ElementNotFoundException(locator);
+			throw new ElementNotFoundException(by);
 		}
 		else if(elements.size() > 1) {
-			throw new TooManyElementsFoundException(locator, elements.size());
+			throw new TooManyElementsFoundException(by, elements.size());
 		}
 		else {
 			return elements.get(0);
 		}
 	}
 	
-	protected WebElement getElement(By locator) throws ElementNotFoundException, TooManyElementsFoundException {
-		return getElement(this, locator);
+	protected WebElement getElement(By by) throws ElementNotFoundException, TooManyElementsFoundException {
+		return getElement(this, by);
+	}
+	
+	protected List<WebElement> getElements(SearchContext context, By by) throws ElementNotFoundException {
+		List<WebElement> elements = findElements(by);
+		if(elements.size() == 0) {
+			throw new ElementNotFoundException(by);
+		}
+		
+		if(elements.size() > 1) {
+			System.err.println("Warning: found " + elements.size() + " elements matching " + by);
+		}
+		return elements;
+	}
+	
+	protected List<WebElement> getElements(By by) throws ElementNotFoundException {
+		return getElements(this, by);
 	}
 	
 	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
@@ -109,14 +125,14 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
 				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), getElement(ElementLocator.parse(command.getArgument(0))).getText());
 				break; case click                   : getElement(ElementLocator.parse(command.getArgument(0))).click();
-				break; case check                   : { WebElement e = getElement(ElementLocator.parse(command.getArgument(0))); if(e.getAttribute("checked") == null) e.click(); }
+				break; case check                   : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.getAttribute("checked") == null) e.click(); }
 				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( getElement(ElementLocator.parse(command.getArgument(0))), getElement(ElementLocator.parse(command.getArgument(1))) ).perform();
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
 				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
 				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
-				break; case type                    : { WebElement e = getElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1)); }
-				break; case select                  : { WebElement e = getElement(ElementLocator.parse(command.getArgument(0))); new Select(e).selectByValue( getElement(e,OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
+				break; case type                    : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) { e.clear(); e.sendKeys(command.getArgument(1)); } }
+				break; case select                  : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) new Select(e).selectByValue( getElement(e,OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
 				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }

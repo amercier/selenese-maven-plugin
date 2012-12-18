@@ -242,7 +242,7 @@ public class TestCaseRunner extends Thread {
 		
 		// Raise a failure if the driver hasn't been closed properly
 		if(!closed) {
-			getLog().warn(new RuntimeException(this + ": failed to close WebDriver session after " + CLOSE_RETRIES + " attempts"));
+			getLog().warn(this + ": failed to close WebDriver session after " + CLOSE_RETRIES + " attempts");
 		}
 	}
 	
