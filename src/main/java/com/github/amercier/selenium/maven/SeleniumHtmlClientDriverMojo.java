@@ -31,6 +31,10 @@ import com.github.amercier.selenium.thread.ObservableCountDownLatch;
  * Goal which sends Selenese HTML tests to be run by a remote or local Selenium
  * 2 Server/Grid Hub
  * 
+ * @todo Parameter timeout = 30000
+ * @todo Parameter maxSimultaneousTests = 0
+ * @todo Parameter delayBetweenTests = 0
+ * 
  * @goal  integration-test
  * @phase integration-test
  */

@@ -147,6 +147,7 @@
 			<plugin>
 				<groupId>com.github.jeluard</groupId>
 				<artifactId>maven-plantuml-plugin</artifactId>
+				<version>7940</version>
 				<configuration>
 					<sourceFiles>
 						<directory>${basedir}</directory>
@@ -156,6 +157,7 @@
 					</sourceFiles>
 					<outputInSourceDirectory>true</outputInSourceDirectory>
 				</configuration>
+				<!-- 
 				<executions>
 					<execution>
 						<goals>
@@ -163,6 +165,7 @@
 						</goals>
 					</execution>
 				</executions>
+				 -->
 			</plugin>
 			
 		</plugins>

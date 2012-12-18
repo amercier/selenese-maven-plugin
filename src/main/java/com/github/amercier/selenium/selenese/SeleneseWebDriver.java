@@ -2,10 +2,12 @@ package com.github.amercier.selenium.selenese;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
@@ -16,8 +18,10 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import com.github.amercier.selenium.exceptions.ElementNotFoundException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
+import com.github.amercier.selenium.exceptions.TooManyElementsFoundException;
 import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.selenese.assertions.Assert;
 import com.github.amercier.selenium.selenese.assertions.AssertionFailedException;
@@ -77,7 +81,24 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 		});
 	}
 	
-	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException {
+	protected WebElement getElement(SearchContext context, By locator) throws ElementNotFoundException, TooManyElementsFoundException {
+		List<WebElement> elements = locator.findElements(context);
+		if(elements.size() == 0) {
+			throw new ElementNotFoundException(locator);
+		}
+		else if(elements.size() > 1) {
+			throw new TooManyElementsFoundException(locator, elements.size());
+		}
+		else {
+			return elements.get(0);
+		}
+	}
+	
+	protected WebElement getElement(By locator) throws ElementNotFoundException, TooManyElementsFoundException {
+		return getElement(this, locator);
+	}
+	
+	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
 		
 		command.setVariables(storage);
 		
@@ -86,16 +107,16 @@ public class SeleneseWebDriver extends RemoteWebDriver {
 				       case assertElementPresent    : Assert.assertNotEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Can not find element \"" + command.getArgument(0) + "\"");
 				break; case assertElementNotPresent : Assert.assertEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Element \"" + command.getArgument(0) + "\" is present");
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
-				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), findElement(ElementLocator.parse(command.getArgument(0))).getText());
-				break; case click                   : findElement(ElementLocator.parse(command.getArgument(0))).click();
-				break; case check                   : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); if(e.getAttribute("checked") == null) e.click(); }
-				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( findElement(ElementLocator.parse(command.getArgument(0))), findElement(ElementLocator.parse(command.getArgument(1))) ).perform();
+				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), getElement(ElementLocator.parse(command.getArgument(0))).getText());
+				break; case click                   : getElement(ElementLocator.parse(command.getArgument(0))).click();
+				break; case check                   : { WebElement e = getElement(ElementLocator.parse(command.getArgument(0))); if(e.getAttribute("checked") == null) e.click(); }
+				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( getElement(ElementLocator.parse(command.getArgument(0))), getElement(ElementLocator.parse(command.getArgument(1))) ).perform();
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
 				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
 				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
-				break; case type                    : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1)); }
-				break; case select                  : { WebElement e = findElement(ElementLocator.parse(command.getArgument(0))); new Select(e).selectByValue( e.findElement(OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
+				break; case type                    : { WebElement e = getElement(ElementLocator.parse(command.getArgument(0))); e.clear(); e.sendKeys(command.getArgument(1)); }
+				break; case select                  : { WebElement e = getElement(ElementLocator.parse(command.getArgument(0))); new Select(e).selectByValue( getElement(e,OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
 				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
