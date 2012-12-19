@@ -137,15 +137,15 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 				break; case assertElementNotPresent : Assert.assertEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Element \"" + command.getArgument(0) + "\" is present");
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
 				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), getElement(ElementLocator.parse(command.getArgument(0))).getText());
-				break; case click                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) e.click();
-				break; case check                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.getAttribute("checked") == null) e.click();
+				break; case click                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) e.click();
+				break; case check                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed() && e.getAttribute("checked") == null) e.click();
 				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( getElement(ElementLocator.parse(command.getArgument(0))), getElement(ElementLocator.parse(command.getArgument(1))) ).perform();
 				break; case getEval                 : executeScript(command.getArgument(0), new Object[0]);
 				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
 				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
-				break; case type                    : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) { e.clear(); e.sendKeys(command.getArgument(1)); } }
-				break; case select                  : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) new Select(e).selectByValue( getElement(e,OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
+				break; case type                    : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) { e.clear(); e.sendKeys(command.getArgument(1)); } }
+				break; case select                  : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) new Select(e).selectByValue( getElement(e,OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
 				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
