@@ -95,12 +95,22 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	}
 	
 	protected WebElement getElement(SearchContext context, By by) throws ElementNotFoundException, TooManyElementsFoundException {
-		List<WebElement> elements = context.findElements(by);
+		List<WebElement> elements = by.findElements(context);
 		if(elements.size() == 0) {
-			throw new ElementNotFoundException(by);
+			if(context == this) {
+				throw new ElementNotFoundException(by);
+			}
+			else {
+				throw new ElementNotFoundException(by, context);
+			}
 		}
 		else if(elements.size() > 1) {
-			throw new TooManyElementsFoundException(by, elements.size());
+			if(context == this) {
+				throw new TooManyElementsFoundException(by, elements.size());
+			}
+			else {
+				throw new TooManyElementsFoundException(by, context, elements.size());
+			}
 		}
 		else {
 			return elements.get(0);
@@ -112,13 +122,18 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	}
 	
 	protected List<WebElement> getElements(SearchContext context, By by) throws ElementNotFoundException {
-		List<WebElement> elements = findElements(by);
+		List<WebElement> elements = by.findElements(context);
 		if(elements.size() == 0) {
-			throw new ElementNotFoundException(by);
+			if(context == this) {
+				throw new ElementNotFoundException(by);
+			}
+			else {
+				throw new ElementNotFoundException(by, context);
+			}
 		}
 		
 		if(elements.size() > 1) {
-			getLog().warn("Warning: found " + elements.size() + " elements matching " + by);
+			getLog().warn("Warning: found " + elements.size() + " elements matching " + by + (context == this ? "" : " in context " + context));
 		}
 		return elements;
 	}
