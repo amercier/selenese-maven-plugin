@@ -95,7 +95,7 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	}
 	
 	protected WebElement getElement(SearchContext context, By by) throws ElementNotFoundException, TooManyElementsFoundException {
-		List<WebElement> elements = by.findElements(context);
+		List<WebElement> elements = context.findElements(by);
 		if(elements.size() == 0) {
 			throw new ElementNotFoundException(by);
 		}
