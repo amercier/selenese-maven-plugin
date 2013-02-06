@@ -150,6 +150,7 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 			switch(command.getAction()) {
 				       case assertElementPresent    : Assert.assertNotEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Can not find element \"" + command.getArgument(0) + "\"");
 				break; case assertElementNotPresent : Assert.assertEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Element \"" + command.getArgument(0) + "\" is present");
+				break; case assertEval              : { String result = "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]); Assert.assertEqual(result, command.getArgument(1), "Script \"" + command.getArgument(0) + "\" returned \"" + result + "\""); }
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
 				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), getElement(ElementLocator.parse(command.getArgument(0))).getText());
 				break; case click                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) e.click();
