@@ -177,6 +177,7 @@ public class TestCaseRunner extends Thread {
 					}
 					currentCommand = command;
 					getLog().debug(this + " Running " + command);
+					Thread.sleep(100);
 					driver.execute(command);
 				}
 			}
