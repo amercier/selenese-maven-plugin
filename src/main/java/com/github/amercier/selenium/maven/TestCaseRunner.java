@@ -153,6 +153,17 @@ public class TestCaseRunner extends Thread {
 		this.log = log;
 	}
 	
+	protected void recordJavascriptErrors(SeleneseWebDriver driver) {
+		driver.executeScript("window.onerror = function(errorMsg, url, lineNumber) { document.body.attributes['data-selenium-error'] = errorMsg + ' in ' + url + ' at line ' + lineNumber }");
+	}
+	
+	protected void checkJavascriptErrors(SeleneseWebDriver driver) {
+		Object error = driver.executeScript("return (document.body.attributes['data-selenium-error'])");
+		if(error != null) {
+			getLog().warn(this + ": (JavaScript error) " + error.toString());
+		}
+	}
+	
 	@Override
 	public void run() {
 		getLog().debug(this + " Starting running test case (" + getTestCase().getCommands().length + " commands)");
@@ -176,8 +187,13 @@ public class TestCaseRunner extends Thread {
 						break;
 					}
 					currentCommand = command;
+					
+					checkJavascriptErrors(driver);
 					getLog().debug(this + " Running " + command);
-					Thread.sleep(100);
+					recordJavascriptErrors(driver);
+					checkJavascriptErrors(driver);
+					
+					Thread.sleep(1000);
 					driver.execute(command);
 				}
 			}
@@ -217,6 +233,9 @@ public class TestCaseRunner extends Thread {
 				
 				// Close the driver unless its initialization failed
 				if(driver != null) {
+					
+					checkJavascriptErrors(driver);
+					
 					getLog().debug(this + " Closing driver session");
 					
 					for(int retries = 0 ; !closed && retries < CLOSE_RETRIES ; retries++) {

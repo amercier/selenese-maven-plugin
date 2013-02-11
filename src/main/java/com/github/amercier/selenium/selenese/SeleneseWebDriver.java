@@ -160,7 +160,7 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 				break; case echo                    : System.out.println(executeScript("return ('" + command.getArgument(0) + "')", new Object[0]));
 				break; case open                    : get(getAbsoluteURL(command.getArgument(0)));
 				break; case pause                   : pause(Long.parseLong(command.getArgument(0)));
-				break; case type                    : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) { e.clear(); e.sendKeys(command.getArgument(1)); } }
+				break; case type                    : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) if(e.isEnabled()) { e.clear(); e.sendKeys(command.getArgument(1)); } else getLog().warn("Warning: element \"" + command.getArgument(0) + "\" is disabled"); }
 				break; case select                  : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) new Select(e).selectByValue( getElement(e,OptionLocator.parse(command.getArgument(1))).getAttribute("value") ); }
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
