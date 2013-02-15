@@ -42,6 +42,10 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	
 	protected Log log;
 	
+	public SeleneseWebDriver() {
+		super();
+	}
+	
 	public SeleneseWebDriver(URL baseURL, URL remoteAddress, DesiredCapabilities desiredCapabilities, Log log) {
 		super(remoteAddress, desiredCapabilities);
 		setBaseURL(baseURL);
