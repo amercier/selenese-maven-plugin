@@ -4,10 +4,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map.Entry;
 
-import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 
 public class SeleneseCommand {
@@ -15,7 +13,7 @@ public class SeleneseCommand {
 	/**
 	 * Variable pattern: ${variable}
 	 */
-	public static final Pattern PATTERN_VARIABLE = Pattern.compile("\\$\\{([^\\}]+)\\}");
+	//public static final Pattern PATTERN_VARIABLE = Pattern.compile("\\$\\{([^\\}]+)\\}");
 	
 	protected Action action;
 	protected List<String> arguments;
@@ -53,33 +51,32 @@ public class SeleneseCommand {
 	}
 	
 	protected String getRawArgument(int index) {
-		return this.arguments.get(index);
+		return arguments.get(index);
 	}
 	
-	public String getArgument(int index) throws InvalidSeleneseCommandArgumentException, IllegalAccessException {
+	public String getArgument(int index) throws IllegalAccessException {
 		if(variables == null) {
 			throw new IllegalAccessException("Can not parse arguments while variables are not set.");
 		}
 		String argument = getRawArgument(index);
-		Matcher matcher = PATTERN_VARIABLE.matcher(argument);
-		while(matcher.find()) {
-			
-			// Extract variable
-			String variableName = matcher.group(1);
-			
-			// Ensure variable is set
-			if(!variables.containsKey(variableName)) {
-				throw new InvalidSeleneseCommandArgumentException(argument + " (variable " + variableName + " is not set)");
-			}
-			
-			// Replace variable in argument
-			argument = argument.replace("${" + variableName + "}", variables.get(variableName));
-			
-			// Update matcher
-			matcher = PATTERN_VARIABLE.matcher(argument);
+		
+		for(Entry<String,String> variable : variables.entrySet()) {
+			argument = argument.replace("${" + variable.getKey() + "}", variable.getValue());
 		}
 		
 		return argument;
+	}
+	
+	public String[] getArguments() {
+		String[] arguments = new String[this.arguments.size()];
+		for(int i = 0 ; i < arguments.length ; i++) {
+			try {
+				arguments[i] = getArgument(i);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		return arguments;
 	}
 	
 	public void setVariables(Map<String,String> variables) {
@@ -88,6 +85,6 @@ public class SeleneseCommand {
 	
 	@Override
 	public String toString() {
-		return getAction() + "(" + Arrays.toString(getRawArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
+		return getAction() + "(" + Arrays.toString(variables == null ? getRawArguments() : getArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
 	}
 }

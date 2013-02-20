@@ -149,6 +149,7 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
 		
 		command.setVariables(storage);
+		getLog().debug("Executing " + command);
 		
 		try {
 			switch(command.getAction()) {
@@ -156,7 +157,9 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 				break; case assertElementNotPresent : Assert.assertEqual(0, this.findElements(ElementLocator.parse(command.getArgument(0))).size(), "Element \"" + command.getArgument(0) + "\" is present");
 				break; case assertEval              : { String result = "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]); Assert.assertEqual(result, command.getArgument(1), "Script \"" + command.getArgument(0) + "\" returned \"" + result + "\""); }
 				break; case assertLocation          : Assert.assertPatternMatches(parsePattern(command.getArgument(0)), getCurrentUrl());
+				break; case assertNotVisible        : Assert.assertFalse(getElement(ElementLocator.parse(command.getArgument(0))).isDisplayed(), "Element \"" + command.getArgument(0) + "\" is visible");
 				break; case assertText              : Assert.assertPatternMatches(parsePattern(command.getArgument(1)), getElement(ElementLocator.parse(command.getArgument(0))).getText());
+				break; case assertVisible           : Assert.assertTrue(getElement(ElementLocator.parse(command.getArgument(0))).isDisplayed(), "Element \"" + command.getArgument(0) + "\" is visible");
 				break; case click                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) e.click();
 				break; case check                   : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed() && e.getAttribute("checked") == null) e.click();
 				break; case dragAndDropToObject     : (new Actions(this)).dragAndDrop( getElement(ElementLocator.parse(command.getArgument(0))), getElement(ElementLocator.parse(command.getArgument(1))) ).perform();

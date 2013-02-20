@@ -342,7 +342,7 @@ public class TestCaseRunner extends Thread {
 	
 	protected void raiseError(Throwable failure, int executedCommands, SeleneseWebDriver driver) {
 		SeleneseCommand[] commands = getTestCase().getCommands();
-		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands-1];
+		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands];
 		failure.setStackTrace(getSeleneseStackTrace(executedCommands));
 		this.setError(new MojoExecutionException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()), failure));
 		takeScreenShot(driver);
@@ -354,7 +354,7 @@ public class TestCaseRunner extends Thread {
 	
 	protected void raiseFailure(Throwable failure, int executedCommands, SeleneseWebDriver driver) {
 		SeleneseCommand[] commands = getTestCase().getCommands();
-		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands-1];
+		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands];
 		failure.setStackTrace(getSeleneseStackTrace(executedCommands));
 		this.setFailure(new MojoFailureException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()), failure));
 		takeScreenShot(driver);

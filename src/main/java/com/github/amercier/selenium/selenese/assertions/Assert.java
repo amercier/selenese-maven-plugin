@@ -45,4 +45,16 @@ public class Assert {
 			throw new AssertionFailedException(message);
 		}
 	}
+
+	public static void assertTrue(boolean actual, String message) throws AssertionFailedException {
+		if(!actual) {
+			throw new AssertionFailedException(message);
+		}
+	}
+
+	public static void assertFalse(boolean actual, String message) throws AssertionFailedException {
+		if(actual) {
+			throw new AssertionFailedException(message);
+		}
+	}
 }
