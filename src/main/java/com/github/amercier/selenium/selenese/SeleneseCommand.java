@@ -67,14 +67,10 @@ public class SeleneseCommand {
 		return argument;
 	}
 	
-	public String[] getArguments() {
+	public String[] getArguments() throws IllegalAccessException {
 		String[] arguments = new String[this.arguments.size()];
 		for(int i = 0 ; i < arguments.length ; i++) {
-			try {
-				arguments[i] = getArgument(i);
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			}
+			arguments[i] = getArgument(i);
 		}
 		return arguments;
 	}
@@ -85,6 +81,10 @@ public class SeleneseCommand {
 	
 	@Override
 	public String toString() {
-		return getAction() + "(" + Arrays.toString(variables == null ? getRawArguments() : getArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
+		return getAction() + "(" + Arrays.toString(getRawArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
+	}
+	
+	public String toCompiledString() throws IllegalAccessException {
+		return getAction() + "(" + Arrays.toString(getArguments()).replaceAll("(^\\[|\\]$)", "") + ")";
 	}
 }

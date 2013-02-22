@@ -20,6 +20,7 @@ public enum Action {
 	select(2),
 	storeEval(2),
 	type(2),
+	uncheck(1),
 	waitForElementNotPresent(1),
 	waitForElementPresent(1),
 	waitForEval(2),
