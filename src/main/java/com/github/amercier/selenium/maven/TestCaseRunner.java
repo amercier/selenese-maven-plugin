@@ -333,7 +333,7 @@ public class TestCaseRunner extends Thread {
 		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands];
 		failure.setStackTrace(getSeleneseStackTrace(executedCommands));
 		File screenshot = takeScreenShot(driver);
-		this.setError(new MojoExecutionException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()) + (screenshot == null ? "" : " (a screenshot has been recorded: " + screenshot.getName() + ")"), failure));
+		this.setError(new MojoExecutionException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()) + (screenshot == null ? "" : ". A screenshot has been recorded as " + screenshot.getName()), failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {
