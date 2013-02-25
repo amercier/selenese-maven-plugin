@@ -22,7 +22,6 @@ import com.github.amercier.selenium.exceptions.ElementNotFoundException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandArgumentException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
 import com.github.amercier.selenium.exceptions.TooManyElementsFoundException;
-import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
 import com.github.amercier.selenium.selenese.assertions.Assert;
 import com.github.amercier.selenium.selenese.assertions.AssertionFailedException;
 import com.github.amercier.selenium.selenese.log.Log;
@@ -146,7 +145,7 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 		return getElements(this, by);
 	}
 	
-	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, UnknownSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
+	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
 		
 		command.setVariables(storage);
 		

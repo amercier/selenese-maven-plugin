@@ -20,8 +20,9 @@ import org.openqa.selenium.remote.Augmenter;
 
 import com.github.amercier.selenium.ServerAddress;
 import com.github.amercier.selenium.exceptions.CapabilitiesNotFoundException;
+import com.github.amercier.selenium.exceptions.ElementNotFoundException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
-import com.github.amercier.selenium.exceptions.UnknownSeleneseCommandException;
+import com.github.amercier.selenium.exceptions.TooManyElementsFoundException;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
 import com.github.amercier.selenium.selenese.SeleneseTestCase;
@@ -170,16 +171,17 @@ public class TestCaseRunner extends Thread {
 		}
 	}
 	
-	protected void takeScreenShot(SeleneseWebDriver driver) {
+	protected File takeScreenShot(SeleneseWebDriver driver) {
 		try {
 			WebDriver augmentedDriver = new Augmenter().augment(driver);
 			File scrFile = ((TakesScreenshot)augmentedDriver).getScreenshotAs(OutputType.FILE);
 			File destFile = new File("target/screenshots/" + scrFile.getName());
 			FileUtils.copyFile(scrFile, destFile);
-			getLog().warn("Recorded screenshot: " + destFile.getAbsolutePath());
+			return destFile;
 		}
 		catch(Throwable e) {
-			getLog().error("Error while taking screenshot: " + e.getMessage());
+			getLog().error(this + " Error while taking screenshot (" + e.getMessage() + ")");
+			return null;
 		}
 	}
 	
@@ -216,38 +218,26 @@ public class TestCaseRunner extends Thread {
 				}
 			}
 			
+			// Wrongly written tests
+			catch(InvalidSeleneseCommandException e) { raiseFailure(e, executedCommands); }
+			/*
+			catch(UnknownSeleneseCommandException e) { raiseFailure(e, executedCommands); }
+			*/
+			// Failed test
+			catch(AssertionFailedException e)        { raiseError(e, executedCommands, driver); }
+			catch(ElementNotFoundException e)        { raiseError(e, executedCommands, driver); }
+			catch(TooManyElementsFoundException e)   { raiseError(e, executedCommands, driver); }
+			
 			// Driver initialization
-			catch(CapabilitiesNotFoundException e)   { raiseError(e); }
+			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
 			catch(MalformedURLException e)           { raiseFailure(e); }
 			
 			// Command execution
-			catch(AssertionFailedException e)        { raiseError(e, executedCommands, driver); }
-			catch(InvalidSeleneseCommandException e) { raiseFailure(e, executedCommands, driver); }
-			catch(UnknownSeleneseCommandException e) { raiseFailure(e, executedCommands, driver); }
-			catch(InterruptedException e)            { raiseFailure(e, executedCommands, driver); }
-			catch(WebDriverException e)              { raiseError(e, executedCommands, driver); }
-			
-			// Other
-			catch(RuntimeException e)                { raiseFailure(e, executedCommands, driver); }
+			catch(InterruptedException e)            { raiseFailure(e, executedCommands); }
+			catch(WebDriverException e)              { raiseFailure(e, executedCommands); }
+			catch(RuntimeException e)                { raiseFailure(e, executedCommands); }
 			
 			finally {
-				
-				// Print Javascript stacktrace, if any
-				/* try {
-					List<JavaScriptError> jsErrors = JavaScriptError.readErrors(driver);
-					if(jsErrors.isEmpty()) {
-						getLog().debug(this + " No JavaScript errors found");
-					}
-					else {
-						getLog().error(this + " Found " + jsErrors.size() + " Javascript error" + (jsErrors.size() > 1 ? "s" : "") + ":");
-						for(JavaScriptError jsError : jsErrors) {
-							getLog().error(this + "     - " + jsError);
-						}
-					}
-				}
-				catch(Exception e) {
-					getLog().error(this + " Error while reading Javascript errors: " + e.getMessage());
-				}*/
 				
 				// Close the driver unless its initialization failed
 				if(driver != null) {
@@ -276,7 +266,9 @@ public class TestCaseRunner extends Thread {
 		try {
 			latch.countDown(this);
 		}
-		catch(RuntimeException e) { raiseFailure(e); }
+		catch(RuntimeException e) {
+			raiseFailure(e);
+		}
 		
 		// Raise a failure if the driver hasn't been closed properly
 		if(!closed) {
@@ -327,10 +319,6 @@ public class TestCaseRunner extends Thread {
 		}
 	}
 	
-	protected void raiseError(Throwable failure) {
-		this.setError(new MojoExecutionException(failure.getMessage(), failure));
-	}
-	
 	protected StackTraceElement[] getSeleneseStackTrace(int executedCommands) {
 		SeleneseCommand[] commands = getTestCase().getCommands();
 		StackTraceElement[] stacktrace = new StackTraceElement[Math.min(executedCommands + 1, commands.length)];
@@ -344,20 +332,19 @@ public class TestCaseRunner extends Thread {
 		SeleneseCommand[] commands = getTestCase().getCommands();
 		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands];
 		failure.setStackTrace(getSeleneseStackTrace(executedCommands));
-		this.setError(new MojoExecutionException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()), failure));
-		takeScreenShot(driver);
+		File screenshot = takeScreenShot(driver);
+		this.setError(new MojoExecutionException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()) + (screenshot == null ? "" : " (a screenshot has been recorded: " + screenshot.getName() + ")"), failure));
 	}
 	
 	protected void raiseFailure(Throwable failure) {
 		this.setFailure(new MojoFailureException(failure.getMessage(), failure));
 	}
 	
-	protected void raiseFailure(Throwable failure, int executedCommands, SeleneseWebDriver driver) {
+	protected void raiseFailure(Throwable failure, int executedCommands) {
 		SeleneseCommand[] commands = getTestCase().getCommands();
 		SeleneseCommand command = executedCommands == commands.length ? null : commands[executedCommands];
 		failure.setStackTrace(getSeleneseStackTrace(executedCommands));
 		this.setFailure(new MojoFailureException((command == null ? "test case shutdown " : command + ": ") + (failure.getMessage().equals("") ? "unknown " + failure.getClass().getName() + " error" : failure.getMessage()), failure));
-		takeScreenShot(driver);
 	}
 	
 	@Override

@@ -117,13 +117,13 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 			public void fireCountedDown(ObservableCountDownLatch<TestCaseRunner> observableCountDownLatch, TestCaseRunner terminated) {
 				SeleneseTestCase testCase = terminated.getTestCase();
 				if(testCase.hasSucceeded()) {
-					SeleniumHtmlClientDriverMojo.this.getLog().info(terminated + " Succeeded");
+					SeleniumHtmlClientDriverMojo.this.getLog().info(terminated + " SUCCESS");
 				}
 				else if(testCase.hasErrored()) {
-					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " Error (" + terminated.getTestCase().getError().getMessage().replaceAll("\\n.*", "") + ")");
+					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " ERROR (" + terminated.getTestCase().getError().getMessage().replaceAll("\\n.*", "") + ")");
 				}
 				else {
-					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " Failed (" + terminated.getTestCase().getFailure().getMessage().replaceAll("\\n.*", "") + ")");
+					SeleniumHtmlClientDriverMojo.this.getLog().error(terminated + " FAILURE (" + terminated.getTestCase().getFailure().getMessage().replaceAll("\\n.*", "") + ")");
 				}
 			}
 		};
@@ -259,7 +259,8 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				throw (MojoFailureException)testCase.getFailure();
 			}
 			else if(testCase.hasErrored()) {
-				throw (MojoExecutionException)testCase.getError();
+				getLog().warn(testCase.getError());
+				//throw (MojoExecutionException)testCase.getError();
 			}
 		}
 	}
