@@ -204,17 +204,17 @@ public class TestCaseRunner extends Thread {
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
+					
 					if(isInterrupted()) {
 						break;
 					}
-					checkJavascriptErrors(driver);
-					getLog().debug(this + " Running " + command);
-					recordJavascriptErrors(driver);
-					checkJavascriptErrors(driver);
 					
-					Thread.sleep(1000);
+					getLog().debug(this + " Running " + command);
+					checkJavascriptErrors(driver);
+					recordJavascriptErrors(driver);					
 					driver.execute(command);
 					executedCommands++;
+					checkJavascriptErrors(driver);
 				}
 			}
 			
@@ -242,7 +242,9 @@ public class TestCaseRunner extends Thread {
 				// Close the driver unless its initialization failed
 				if(driver != null) {
 					
-					checkJavascriptErrors(driver);
+					if(!testCase.hasFailed()) {
+						checkJavascriptErrors(driver);
+					}
 					
 					getLog().debug(this + " Closing driver session");
 					
