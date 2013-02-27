@@ -12,11 +12,18 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.json.JSONObject;
+import org.openqa.selenium.ElementNotVisibleException;
+import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.XPathLookupException;
+import org.openqa.selenium.interactions.InvalidCoordinatesException;
 import org.openqa.selenium.remote.Augmenter;
+import org.openqa.selenium.remote.JsonException;
+import org.openqa.selenium.support.ui.UnexpectedTagNameException;
 
 import com.github.amercier.selenium.ServerAddress;
 import com.github.amercier.selenium.exceptions.CapabilitiesNotFoundException;
@@ -220,13 +227,18 @@ public class TestCaseRunner extends Thread {
 			
 			// Wrongly written tests
 			catch(InvalidSeleneseCommandException e) { raiseFailure(e, executedCommands); }
-			/*
-			catch(UnknownSeleneseCommandException e) { raiseFailure(e, executedCommands); }
-			*/
+			
 			// Failed test
 			catch(AssertionFailedException e)        { raiseError(e, executedCommands, driver); }
 			catch(ElementNotFoundException e)        { raiseError(e, executedCommands, driver); }
 			catch(TooManyElementsFoundException e)   { raiseError(e, executedCommands, driver); }
+			catch(TimeoutException e)                { raiseError(e, executedCommands, driver); }
+			catch(ElementNotVisibleException e)      { raiseError(e, executedCommands, driver); }
+			catch(InvalidCoordinatesException e)     { raiseError(e, executedCommands, driver); }
+			catch(InvalidElementStateException e)    { raiseError(e, executedCommands, driver); }
+			catch(JsonException e)                   { raiseError(e, executedCommands, driver); }
+			catch(UnexpectedTagNameException e)      { raiseError(e, executedCommands, driver); }
+			catch(XPathLookupException e)            { raiseError(e, executedCommands, driver); }
 			
 			// Driver initialization
 			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
