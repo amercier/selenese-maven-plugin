@@ -75,6 +75,11 @@ public class TestCaseRunner extends Thread {
 	protected URL baseUrl;
 	
 	/**
+	 * Delay between two consecutive commands
+	 */
+	protected long commandInterval;
+	
+	/**
 	 * Synchronization manager
 	 */
 	protected ObservableCountDownLatch<TestCaseRunner> latch;
@@ -92,13 +97,14 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * Create a test case runner
 	 */
-	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log) {
+	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log, long commandInterval) {
 		setServer(server);
 		setTestCase(testCase);
 		setCapability(capability);
 		setBaseUrl(baseUrl);
 		setLatch(latch);
 		setLog(log);
+		setCommandInterval(commandInterval);
 		setJUnitTestCase(new junit.framework.TestCase(toString()){});
 	}
 	
@@ -166,6 +172,14 @@ public class TestCaseRunner extends Thread {
 		this.log = log;
 	}
 	
+	public long getCommandInterval() {
+		return commandInterval;
+	}
+	
+	public void setCommandInterval(long commandInterval) {
+		this.commandInterval = commandInterval;
+	}
+	
 	protected void recordJavascriptErrors(SeleneseWebDriver driver) {
 		driver.executeScript("window.onerror = function(errorMsg, url, lineNumber) { document.body.attributes['data-selenium-error'] = errorMsg + ' in ' + url + ' at line ' + lineNumber }");
 	}
@@ -216,8 +230,11 @@ public class TestCaseRunner extends Thread {
 						break;
 					}
 					
+					if(getCommandInterval() != 0) {
+						Thread.sleep(getCommandInterval());
+					}
+					
 					getLog().debug(this + " Running " + command);
-					checkJavascriptErrors(driver);
 					recordJavascriptErrors(driver);					
 					driver.execute(command);
 					executedCommands++;
