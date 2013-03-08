@@ -21,6 +21,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.XPathLookupException;
 import org.openqa.selenium.interactions.InvalidCoordinatesException;
+import org.openqa.selenium.interactions.MoveTargetOutOfBoundsException;
 import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.remote.JsonException;
 import org.openqa.selenium.support.ui.UnexpectedTagNameException;
@@ -248,12 +249,13 @@ public class TestCaseRunner extends Thread {
 			// Failed test
 			catch(AssertionFailedException e)        { raiseError(e, executedCommands, driver); }
 			catch(ElementNotFoundException e)        { raiseError(e, executedCommands, driver); }
-			catch(TooManyElementsFoundException e)   { raiseError(e, executedCommands, driver); }
-			catch(TimeoutException e)                { raiseError(e, executedCommands, driver); }
 			catch(ElementNotVisibleException e)      { raiseError(e, executedCommands, driver); }
 			catch(InvalidCoordinatesException e)     { raiseError(e, executedCommands, driver); }
 			catch(InvalidElementStateException e)    { raiseError(e, executedCommands, driver); }
 			catch(JsonException e)                   { raiseError(e, executedCommands, driver); }
+			catch(MoveTargetOutOfBoundsException e)  { raiseError(e, executedCommands, driver); }
+			catch(TimeoutException e)                { raiseError(e, executedCommands, driver); }
+			catch(TooManyElementsFoundException e)   { raiseError(e, executedCommands, driver); }
 			catch(UnexpectedTagNameException e)      { raiseError(e, executedCommands, driver); }
 			catch(XPathLookupException e)            { raiseError(e, executedCommands, driver); }
 			
