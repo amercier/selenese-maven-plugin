@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.InvalidElementStateException;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -254,6 +255,7 @@ public class TestCaseRunner extends Thread {
 			catch(InvalidElementStateException e)    { raiseError(e, executedCommands, driver); }
 			catch(JsonException e)                   { raiseError(e, executedCommands, driver); }
 			catch(MoveTargetOutOfBoundsException e)  { raiseError(e, executedCommands, driver); }
+			catch(StaleElementReferenceException e)  { raiseError(e, executedCommands, driver); }
 			catch(TimeoutException e)                { raiseError(e, executedCommands, driver); }
 			catch(TooManyElementsFoundException e)   { raiseError(e, executedCommands, driver); }
 			catch(UnexpectedTagNameException e)      { raiseError(e, executedCommands, driver); }
@@ -328,6 +330,39 @@ public class TestCaseRunner extends Thread {
 		}
 	}
 	
+	/*
+	public static String getHostName(InetAddress host) throws UnknownHostException {
+		try {
+			Class<?> clazz = Class.forName("java.net.InetAddress");
+			Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+			constructors[0].setAccessible(true);
+			InetAddress ina = (InetAddress) constructors[0].newInstance();
+			NameService ns;
+
+			Field[] fields = ina.getClass().getDeclaredFields();
+			for(Field field : fields) {
+				if(field.getName().equals("nameService")) {
+					field.setAccessible(true);
+					Method[] methods = field.get(null).getClass().getDeclaredMethods();
+					for (Method method : methods) {
+						if (method.getName().equals("getHostByAddr")) {
+							method.setAccessible(true);
+							return (String) method.invoke(field.get(null), host.getAddress());
+						}
+					}
+				}
+			}
+		}
+		catch (ClassNotFoundException e) { e.printStackTrace(); }
+		catch (IllegalAccessException e) { e.printStackTrace(); }
+		catch (InstantiationException e) { e.printStackTrace(); }
+		catch (InvocationTargetException e) {
+			throw (UnknownHostException) e.getCause();
+		}
+		return null;
+	}
+	*/
+	
 	public String getNodeName(SeleneseWebDriver driver) {
 		try {
 			URL url = new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SESSION_PATH + driver.getSessionId().toString());
@@ -340,12 +375,26 @@ public class TestCaseRunner extends Thread {
 			}
 			buffer.close();
 			JSONObject response = new JSONObject(rawResponse);
+			String nodeName;
 			if(response.getBoolean("success")) {
-				return response.getString("proxyId").replaceAll("^http:\\/\\/(.*):[0-9]+$", "$1");
+				nodeName = response.getString("proxyId").replaceAll("^http:\\/\\/(.*):[0-9]+$", "$1");
 			}
 			else {
-				return response.getString("msg");
+				nodeName = response.getString("msg");
 			}
+			
+			/*
+			if(nodeName.matches("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$")) {
+				try {
+					nodeName = getHostName(InetAddress.getByName(nodeName)) + " (" + nodeName + ")";
+				}
+				catch(UnknownHostException e) {
+					e.printStackTrace();
+				}
+			}
+			*/
+			
+			return nodeName;
 		}
 		catch(Exception e) {
 			return "Error: " + e.getMessage();
