@@ -82,6 +82,11 @@ public class TestCaseRunner extends Thread {
 	protected long commandInterval;
 	
 	/**
+	 * WaitFor commands Timeout
+	 */
+	protected long waitTimeout;
+	
+	/**
 	 * Synchronization manager
 	 */
 	protected ObservableCountDownLatch<TestCaseRunner> latch;
@@ -99,7 +104,7 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * Create a test case runner
 	 */
-	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log, long commandInterval) {
+	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log, long commandInterval, long waitTimeout) {
 		setServer(server);
 		setTestCase(testCase);
 		setCapability(capability);
@@ -107,6 +112,7 @@ public class TestCaseRunner extends Thread {
 		setLatch(latch);
 		setLog(log);
 		setCommandInterval(commandInterval);
+		setWaitTimeout(waitTimeout);
 		setJUnitTestCase(new junit.framework.TestCase(toString()){});
 	}
 	
@@ -182,6 +188,14 @@ public class TestCaseRunner extends Thread {
 		this.commandInterval = commandInterval;
 	}
 	
+	public long getWaitTimeout() {
+		return waitTimeout;
+	}
+	
+	public void setWaitTimeout(long waitTimeout) {
+		this.waitTimeout = waitTimeout;
+	}
+	
 	protected void recordJavascriptErrors(SeleneseWebDriver driver) {
 		driver.executeScript("window.onerror = function(errorMsg, url, lineNumber) { document.body.attributes['data-selenium-error'] = errorMsg + ' in ' + url + ' at line ' + lineNumber }");
 	}
@@ -224,6 +238,11 @@ public class TestCaseRunner extends Thread {
 				// Driver & interpreter initialization
 				driver = initWebDriver();
 				getLog().info(this + " Starting on " + getNodeName(driver));
+				
+				// Run a random sleep to un-sync the runners
+				if(getCommandInterval() > 0) {
+					Thread.sleep((long) (Math.random() * getCommandInterval()));
+				}
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
@@ -272,6 +291,11 @@ public class TestCaseRunner extends Thread {
 			
 			finally {
 				
+				// Consider the driver as closed if TIMEOUT
+				if(this.getTestCase().hasFailed() && this.getTestCase().getFailure().getMessage().matches("Session \\[[0-9]+\\] was terminated due to TIMEOUT")) {
+					driver = null;
+				}
+				
 				// Close the driver unless its initialization failed
 				if(driver != null) {
 					
@@ -316,18 +340,13 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
-		try {
-			final Log log = getLog();
-			return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
-				public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
-				public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
-				public void error(String message) { log.error(TestCaseRunner.this + " " + message); }
-				public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
-			});
-		}
-		catch(WebDriverException e) {
-			throw new CapabilitiesNotFoundException(getCapability(), getServer());
-		}
+		final Log log = getLog();
+		return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
+			public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
+			public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
+			public void error(String message) { log.error(TestCaseRunner.this + " " + message); }
+			public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
+		}, getWaitTimeout());
 	}
 	
 	/*
