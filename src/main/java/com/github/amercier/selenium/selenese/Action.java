@@ -24,7 +24,9 @@ public enum Action {
 	waitForElementNotPresent(1),
 	waitForElementPresent(1),
 	waitForEval(2),
+	waitForLocation(1),
 	waitForNotEval(2),
+	waitForNotLocation(1),
 	waitForVisible(1);
 	
 	private final int argumentsCount;
