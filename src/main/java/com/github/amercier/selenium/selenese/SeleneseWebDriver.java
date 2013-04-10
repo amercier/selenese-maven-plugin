@@ -35,21 +35,22 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	 */
 	protected Map<String,String> storage;
 	
-	public static long DEFAULT_TIMEOUT = 1800000;
-	
 	protected URL baseURL;
 	
 	protected Log log;
+	
+	protected long waitTimeout;
 	
 	public SeleneseWebDriver() {
 		super();
 	}
 	
-	public SeleneseWebDriver(URL baseURL, URL remoteAddress, DesiredCapabilities desiredCapabilities, Log log) {
+	public SeleneseWebDriver(URL baseURL, URL remoteAddress, DesiredCapabilities desiredCapabilities, Log log, long waitTimeout) {
 		super(remoteAddress, desiredCapabilities);
 		setBaseURL(baseURL);
 		this.storage = new HashMap<String,String>();
 		setLog(log);
+		setWaitTimeout(waitTimeout);
 	}
 
 	public URL getBaseURL() {
@@ -66,6 +67,14 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	
 	public void setLog(Log log) {
 		this.log = log;
+	}
+	
+	public long getWaitTimeout() {
+		return waitTimeout;
+	}
+	
+	public void setWaitTimeout(long waitTimeout) {
+		this.waitTimeout = waitTimeout;
 	}
 	
 	protected String getAbsoluteURL(String relativeURL) {
@@ -179,11 +188,13 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 				break; case storeEval               : storage.put(command.getArgument(1), "" + executeScript("return (" + command.getArgument(0) + ")", new Object[0]));
 				break; case type                    : { for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed()) if(e.isEnabled()) { e.clear(); e.sendKeys(command.getArgument(1)); } else getLog().warn("Warning: element \"" + command.getArgument(0) + "\" is disabled"); }
 				break; case uncheck                 : for(WebElement e : getElements(ElementLocator.parse(command.getArgument(0)))) if(e.isDisplayed() && e.getAttribute("checked") != null) e.click();
-				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
-				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
-				break; case waitForEval             : { final String script = command.getArgument(0); final String expected = command.getArgument(1); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return ("" + executeScript("return (" + script + ")", new Object[0])).equals(expected); }}); }
-				break; case waitForNotEval          : { final String script = command.getArgument(0); final String expected = command.getArgument(1); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return !("" + executeScript("return (" + script + ")", new Object[0])).equals(expected); }}); }
-				break; case waitForVisible          : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, DEFAULT_TIMEOUT / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { for(WebElement e : d.findElements(by)) if(e.isDisplayed()) return true; return false; }}); }
+				break; case waitForElementPresent   : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() != 0; }}); }
+				break; case waitForElementNotPresent: { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return d.findElements(by).size() == 0; }}); }
+				break; case waitForEval             : { final String script = command.getArgument(0); final String expected = command.getArgument(1); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return ("" + executeScript("return (" + script + ")", new Object[0])).equals(expected); }}); }
+				break; case waitForLocation         : { final Pattern pattern = parsePattern(command.getArgument(0)); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return pattern.matcher(getCurrentUrl()).find(); }}); }
+				break; case waitForNotEval          : { final String script = command.getArgument(0); final String expected = command.getArgument(1); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return !("" + executeScript("return (" + script + ")", new Object[0])).equals(expected); }}); }
+				break; case waitForNotLocation      : { final Pattern pattern = parsePattern(command.getArgument(0)); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { return !pattern.matcher(getCurrentUrl()).find(); }}); }
+				break; case waitForVisible          : { final By by = ElementLocator.parse(command.getArgument(0)); new WebDriverWait(this, getWaitTimeout() / 1000).until(new ExpectedCondition<Boolean>(){ public Boolean apply(WebDriver d) { for(WebElement e : d.findElements(by)) if(e.isDisplayed()) return true; return false; }}); }
 			}
 		}
 		catch(InvalidSeleneseCommandArgumentException e) {

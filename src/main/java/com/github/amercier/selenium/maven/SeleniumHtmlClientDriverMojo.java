@@ -95,7 +95,15 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	 * 
 	 * @parameter expression="${selenium.commandInterval}"
 	 */
-	public long commandInterval = 1000;
+	public long commandInterval = 100;
+	
+	
+	/**
+	 * Timeout for waitFor commands
+	 * 
+	 * @parameter expression="${selenium.waitTimeout}"
+	 */
+	public long waitTimeout = 30 * 1000; // 30 seconds
 	
 	
 	/**
@@ -200,7 +208,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
 					for(SeleneseTestCase testCase : suite.getTestCases()) {
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval);
+						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, waitTimeout);
 						formatter.startTest(testRunner.getJUnitTestCase());
 						testRunners.add(testRunner);
 						testRunner.start();
@@ -220,7 +228,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval);
+					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, waitTimeout);
 					testRunners.add(testRunner);
 					testRunner.start();
 				}
