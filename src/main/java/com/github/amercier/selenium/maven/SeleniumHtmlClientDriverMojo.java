@@ -107,6 +107,17 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	
 	
 	/**
+	 * Delay before the first command.
+	 * 
+	 * This prevents errors if executing the first command too fast: "Cannot find test slot
+	 * running session 1234567890 in the registry."
+	 * 
+	 * @parameter expression="${selenium.startDelay}"
+	 */
+	public long startDelay = 1000;
+	
+	
+	/**
 	 * Timeout for waitFor commands
 	 * 
 	 * @parameter expression="${selenium.waitTimeout}"
@@ -223,7 +234,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 							Thread.sleep(startInterval);
 						}
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, waitTimeout);
+						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, startDelay, waitTimeout);
 						formatter.startTest(testRunner.getJUnitTestCase());
 						testRunners.add(testRunner);
 						testRunner.start();
@@ -250,7 +261,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 						Thread.sleep(startInterval);
 					}
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, waitTimeout);
+					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), startDelay, commandInterval, waitTimeout);
 					testRunners.add(testRunner);
 					testRunner.start();
 				}

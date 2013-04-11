@@ -83,6 +83,11 @@ public class TestCaseRunner extends Thread {
 	protected long commandInterval;
 	
 	/**
+	 * Pause before the first command
+	 */
+	protected long startDelay;
+	
+	/**
 	 * WaitFor commands Timeout
 	 */
 	protected long waitTimeout;
@@ -105,7 +110,7 @@ public class TestCaseRunner extends Thread {
 	/**
 	 * Create a test case runner
 	 */
-	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log, long commandInterval, long waitTimeout) {
+	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log, long commandInterval, long startDelay, long waitTimeout) {
 		setServer(server);
 		setTestCase(testCase);
 		setCapability(capability);
@@ -113,6 +118,7 @@ public class TestCaseRunner extends Thread {
 		setLatch(latch);
 		setLog(log);
 		setCommandInterval(commandInterval);
+		setStartDelay(startDelay);
 		setWaitTimeout(waitTimeout);
 		setJUnitTestCase(new junit.framework.TestCase(toString()){});
 	}
@@ -189,6 +195,14 @@ public class TestCaseRunner extends Thread {
 		this.commandInterval = commandInterval;
 	}
 	
+	public long getStartDelay() {
+		return startDelay;
+	}
+	
+	public void setStartDelay(long startDelay) {
+		this.startDelay = startDelay;
+	}
+	
 	public long getWaitTimeout() {
 		return waitTimeout;
 	}
@@ -239,6 +253,9 @@ public class TestCaseRunner extends Thread {
 				// Driver & interpreter initialization
 				driver = initWebDriver();
 				getLog().info(this + " Starting on " + getNodeName(driver));
+				
+				// Run the startDelay sleep
+				Thread.sleep(getStartDelay());
 				
 				// Run a random sleep to un-sync the runners
 				if(getCommandInterval() > 0) {
