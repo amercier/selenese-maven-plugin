@@ -31,6 +31,7 @@ import com.github.amercier.selenium.ServerAddress;
 import com.github.amercier.selenium.exceptions.CapabilitiesNotFoundException;
 import com.github.amercier.selenium.exceptions.ElementNotFoundException;
 import com.github.amercier.selenium.exceptions.InvalidSeleneseCommandException;
+import com.github.amercier.selenium.exceptions.SeleniumNodeNameException;
 import com.github.amercier.selenium.exceptions.TooManyElementsFoundException;
 import com.github.amercier.selenium.maven.configuration.DesiredCapabilities;
 import com.github.amercier.selenium.selenese.SeleneseCommand;
@@ -283,6 +284,7 @@ public class TestCaseRunner extends Thread {
 			// Driver initialization
 			catch(CapabilitiesNotFoundException e)   { raiseFailure(e); }
 			catch(MalformedURLException e)           { raiseFailure(e); }
+			catch(SeleniumNodeNameException e)       { raiseFailure(e); }
 			
 			// Command execution
 			catch(InterruptedException e)            { raiseFailure(e, executedCommands); }
@@ -292,7 +294,10 @@ public class TestCaseRunner extends Thread {
 			finally {
 				
 				// Consider the driver as closed if TIMEOUT
-				if(this.getTestCase().hasFailed() && this.getTestCase().getFailure().getMessage().matches("Session \\[[0-9]+\\] was terminated due to TIMEOUT")) {
+				if(this.getTestCase().hasFailed() && (
+					   this.getTestCase().getFailure().getMessage().matches(".*Session \\[[0-9]+\\] was terminated due to TIMEOUT(?s).*")
+					|| this.getTestCase().getFailure().getMessage().matches(".*Error communicating with the remote browser. It may have died\\.(?s).*")
+				)) {
 					driver = null;
 				}
 				
@@ -382,7 +387,7 @@ public class TestCaseRunner extends Thread {
 	}
 	*/
 	
-	public String getNodeName(SeleneseWebDriver driver) {
+	public String getNodeName(SeleneseWebDriver driver) throws SeleniumNodeNameException {
 		try {
 			URL url = new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SESSION_PATH + driver.getSessionId().toString());
 			URLConnection connection = url.openConnection();
@@ -399,7 +404,7 @@ public class TestCaseRunner extends Thread {
 				nodeName = response.getString("proxyId").replaceAll("^http:\\/\\/(.*):[0-9]+$", "$1");
 			}
 			else {
-				nodeName = response.getString("msg");
+				throw new SeleniumNodeNameException(response.getString("msg"));
 			}
 			
 			/*
@@ -415,8 +420,11 @@ public class TestCaseRunner extends Thread {
 			
 			return nodeName;
 		}
+		catch(SeleniumNodeNameException e) {
+			throw e;
+		}
 		catch(Exception e) {
-			return "Error: " + e.getMessage();
+			throw new SeleniumNodeNameException(e.getClass().getName() + ": " + e.getMessage());
 		}
 	}
 	
