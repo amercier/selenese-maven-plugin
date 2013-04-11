@@ -99,6 +99,14 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 	
 	
 	/**
+	 * Delay between two consecutive commands
+	 * 
+	 * @parameter expression="${selenium.startInterval}"
+	 */
+	public long startInterval = 1000;
+	
+	
+	/**
 	 * Timeout for waitFor commands
 	 * 
 	 * @parameter expression="${selenium.waitTimeout}"
@@ -206,7 +214,14 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				
 				for(DesiredCapabilities capability : capabilities) {
 					getLog().debug("Running test suite " + testSuite.getName() + " on config " + capability);
+					boolean first = true;
 					for(SeleneseTestCase testCase : suite.getTestCases()) {
+						if(first) {
+							first = false;
+						}
+						else {
+							Thread.sleep(startInterval);
+						}
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
 						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, waitTimeout);
 						formatter.startTest(testRunner.getJUnitTestCase());
@@ -226,7 +241,14 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				
 				getLog().info("Running " + capabilities.length + " test case" + (capabilities.length > 1 ? "s" : "") + " (1 test case on " + capabilities.length + " configuration" + (capabilities.length > 1 ? "s" : "") + ") against " + baseUrl);
 				
+				boolean first = true;
 				for(DesiredCapabilities capability : capabilities) {
+					if(first) {
+						first = false;
+					}
+					else {
+						Thread.sleep(startInterval);
+					}
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
 					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, waitTimeout);
 					testRunners.add(testRunner);
@@ -234,6 +256,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 				}
 			}
 		}
+		catch (InterruptedException e)            {	throw new MojoFailureException(e.getMessage(), e); }
 		catch (DOMException e)                    { throw new MojoFailureException(e.getMessage(), e); }
 		catch (SAXException e)                    { throw new MojoFailureException(e.getMessage(), e); }
 		catch (IOException e)                     { throw new MojoFailureException(e.getMessage(), e); }
