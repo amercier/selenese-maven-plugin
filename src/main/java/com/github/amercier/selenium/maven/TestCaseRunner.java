@@ -252,11 +252,13 @@ public class TestCaseRunner extends Thread {
 				
 				// Driver & interpreter initialization
 				driver = initWebDriver();
-				getLog().info(this + " Starting on " + getNodeName(driver));
-				
+
 				// Run the startDelay sleep
 				Thread.sleep(getStartDelay());
+
+				getLog().info(this + " Starting on " + getNodeName(driver));
 				
+
 				// Run a random sleep to un-sync the runners
 				if(getCommandInterval() > 0) {
 					Thread.sleep((long) (Math.random() * getCommandInterval()));
