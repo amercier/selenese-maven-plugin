@@ -92,7 +92,19 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 	}
 	
 	protected long getTime() {
-		return (Long)executeScript("return new Date().getTime()", new Object[0]);
+		Object time = executeScript("return new Date().getTime()", new Object[0]);
+		if(time instanceof Long) {
+			return ((Long)time).longValue();
+		}
+		else if(time instanceof Float) {
+			return ((Float)time).longValue();
+		}
+		else if(time instanceof Double) {
+			return ((Double)time).longValue();
+		}
+		else {
+			throw new RuntimeException("Can't convert " + time.getClass().getName() + " time " + time + " to long.");
+		}
 	}
 	
 	protected void pause(final long milliseconds) {
