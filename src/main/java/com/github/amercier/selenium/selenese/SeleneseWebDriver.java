@@ -166,7 +166,7 @@ public class SeleneseWebDriver extends RemoteWebDriver implements Loggable {
 		return getElements(this, by);
 	}
 	
-	public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
+	synchronized public void execute(final SeleneseCommand command) throws InvalidSeleneseCommandException, InterruptedException, WebDriverException, AssertionFailedException, ElementNotFoundException, TooManyElementsFoundException {
 		
 		command.setVariables(storage);
 		

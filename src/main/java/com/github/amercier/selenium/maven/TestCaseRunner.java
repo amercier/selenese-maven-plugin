@@ -363,7 +363,7 @@ public class TestCaseRunner extends Thread {
 		return new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SERVER_PATH);
 	}
 	
-	protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
+	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
 		final Log log = getLog();
 		return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
 			public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
