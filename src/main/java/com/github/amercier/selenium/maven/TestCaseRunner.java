@@ -25,6 +25,7 @@ import org.openqa.selenium.interactions.InvalidCoordinatesException;
 import org.openqa.selenium.interactions.MoveTargetOutOfBoundsException;
 import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.remote.JsonException;
+import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.openqa.selenium.support.ui.UnexpectedTagNameException;
 
 import com.github.amercier.selenium.ServerAddress;
@@ -365,12 +366,23 @@ public class TestCaseRunner extends Thread {
 	
 	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
 		final Log log = getLog();
-		return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
-			public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
-			public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
-			public void error(String message) { log.error(TestCaseRunner.this + " " + message); }
-			public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
-		}, getWaitTimeout());
+		boolean keepRetrying = true;
+		while(keepRetrying) {
+			try {
+				keepRetrying = false;
+				return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
+					public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
+					public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
+					public void error(String message) { log.error(TestCaseRunner.this + " " + message); }
+					public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
+				}, getWaitTimeout());
+			}
+			catch(UnreachableBrowserException e) {
+				getLog().warn(e);
+				keepRetrying = true;
+			}
+		}
+		return null;
 	}
 	
 	/*
