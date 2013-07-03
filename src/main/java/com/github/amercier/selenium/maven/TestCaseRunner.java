@@ -254,9 +254,6 @@ public class TestCaseRunner extends Thread {
 				// Driver & interpreter initialization
 				driver = initWebDriver();
 
-				// Run the startDelay sleep
-				Thread.sleep(getStartDelay());
-
 				getLog().info(this + " Starting on " + getNodeName(driver));
 				
 
@@ -364,11 +361,14 @@ public class TestCaseRunner extends Thread {
 		return new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SERVER_PATH);
 	}
 	
-	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException {
+	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException, InterruptedException {
 		final Log log = getLog();
 		boolean keepRetrying = true;
 		while(keepRetrying) {
 			try {
+				// Run the startDelay sleep
+				Thread.sleep(getStartDelay());
+
 				keepRetrying = false;
 				return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
 					public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
@@ -378,7 +378,6 @@ public class TestCaseRunner extends Thread {
 				}, getWaitTimeout());
 			}
 			catch(UnreachableBrowserException e) {
-				getLog().warn(e);
 				keepRetrying = true;
 			}
 		}
