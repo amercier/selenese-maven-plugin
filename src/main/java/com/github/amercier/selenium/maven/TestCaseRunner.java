@@ -253,14 +253,6 @@ public class TestCaseRunner extends Thread {
 				
 				// Driver & interpreter initialization
 				driver = initWebDriver();
-
-				getLog().info(this + " Starting on " + getNodeName(driver));
-				
-
-				// Run a random sleep to un-sync the runners
-				if(getCommandInterval() > 0) {
-					Thread.sleep((long) (Math.random() * getCommandInterval()));
-				}
 				
 				// Run commands
 				for(SeleneseCommand command : getTestCase().getCommands()) {
@@ -361,27 +353,36 @@ public class TestCaseRunner extends Thread {
 		return new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SERVER_PATH);
 	}
 	
-	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException, InterruptedException {
+	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException, InterruptedException, SeleniumNodeNameException {
 		final Log log = getLog();
 		boolean keepRetrying = true;
+		SeleneseWebDriver driver = null;
 		while(keepRetrying) {
 			try {
 				// Run the startDelay sleep
 				Thread.sleep(getStartDelay());
 
 				keepRetrying = false;
-				return new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
+				driver = new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
 					public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
 					public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
 					public void error(String message) { log.error(TestCaseRunner.this + " " + message); }
 					public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
 				}, getWaitTimeout());
+
+				getLog().info(this + " Starting on " + getNodeName(driver));
+
+				// Run a random sleep to de-sync the runners
+				if(getCommandInterval() > 0) {
+					Thread.sleep((long) (Math.random() * getCommandInterval()));
+				}
 			}
 			catch(UnreachableBrowserException e) {
 				keepRetrying = true;
 			}
 		}
-		return null;
+		
+		return driver;
 	}
 	
 	/*
@@ -417,7 +418,7 @@ public class TestCaseRunner extends Thread {
 	}
 	*/
 	
-	public String getNodeName(SeleneseWebDriver driver) throws SeleniumNodeNameException {
+	synchronized public String getNodeName(SeleneseWebDriver driver) throws SeleniumNodeNameException {
 		try {
 			URL url = new URL("http://" + getServer().getHostName() + ":" + getServer().getPort() + REMOTE_SESSION_PATH + driver.getSessionId().toString());
 			URLConnection connection = url.openConnection();
