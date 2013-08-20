@@ -18,6 +18,8 @@ public class SeleneseTestCase {
 	public SeleneseTestCase(String name) {
 		this.setName(name);
 		this.commands = new LinkedList<SeleneseCommand>();
+		this.error = null;
+		this.failure = null;
 	}
 	
 	public String getName() {
@@ -68,5 +70,25 @@ public class SeleneseTestCase {
 	
 	public boolean hasSucceeded() {
 		return error == null && failure == null;
+	}
+	
+	public String getStatus() {
+		if(this.hasFailed()) {
+			return "FAILURE";
+		}
+		else if(this.hasErrored()) {
+			return "ERROR";
+		}
+		else {
+			return "SUCCESS";
+		}
+	}
+	
+	public SeleneseTestCase cloneWithoutState() {
+		SeleneseTestCase clone = new SeleneseTestCase(getName());
+		for(SeleneseCommand command : getCommands()) {
+			clone.addCommand(command);
+		}
+		return clone;
 	}
 }

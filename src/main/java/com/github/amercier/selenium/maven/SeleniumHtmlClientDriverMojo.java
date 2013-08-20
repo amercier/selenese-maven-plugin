@@ -234,7 +234,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 							Thread.sleep(startInterval);
 						}
 						getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-						TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), commandInterval, startDelay, waitTimeout);
+						TestCaseRunner testRunner = new TestCaseRunner(server, testCase.cloneWithoutState(), capability, baseUrl, latch, getLog(), commandInterval, startDelay, waitTimeout);
 						formatter.startTest(testRunner.getJUnitTestCase());
 						testRunners.add(testRunner);
 						testRunner.start();
@@ -261,7 +261,7 @@ public class SeleniumHtmlClientDriverMojo extends AbstractMojo {
 						Thread.sleep(startInterval);
 					}
 					getLog().debug("Running test case " + testCase.getName() + " on config " + capability);
-					TestCaseRunner testRunner = new TestCaseRunner(server, testCase, capability, baseUrl, latch, getLog(), startDelay, commandInterval, waitTimeout);
+					TestCaseRunner testRunner = new TestCaseRunner(server, testCase.cloneWithoutState(), capability, baseUrl, latch, getLog(), startDelay, commandInterval, waitTimeout);
 					testRunners.add(testRunner);
 					testRunner.start();
 				}

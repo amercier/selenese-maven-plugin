@@ -10,10 +10,13 @@ public class CapabilitiesNotFoundException extends Exception {
 	
 	public ServerAddress server;
 
-	public CapabilitiesNotFoundException(DesiredCapabilities capabilities, ServerAddress server) {
-		super(capabilities + " not found on server " + server);
+	public CapabilitiesNotFoundException(DesiredCapabilities capabilities, ServerAddress server, String reason) {
+		super(capabilities + " not found on server " + server + reason);
 		this.capabilities = capabilities;
 		this.server = server;
 	}
-	
+
+	public CapabilitiesNotFoundException(DesiredCapabilities capabilities, ServerAddress server) {
+		this(capabilities, server, "");
+	}
 }

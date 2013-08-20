@@ -112,6 +112,14 @@ public class TestCaseRunner extends Thread {
 	 * Create a test case runner
 	 */
 	public TestCaseRunner(ServerAddress server, SeleneseTestCase testCase, DesiredCapabilities capability, URL baseUrl, ObservableCountDownLatch<TestCaseRunner> latch, Log log, long commandInterval, long startDelay, long waitTimeout) {
+		
+		if(testCase.hasErrored()) {
+			throw new RuntimeException("Test case " + testCase + " is already on ERROR state");
+		}
+		if(testCase.hasFailed()) {
+			throw new RuntimeException("Test case " + testCase + " is already on FAILURE state");
+		}
+		
 		setServer(server);
 		setTestCase(testCase);
 		setCapability(capability);
@@ -165,10 +173,12 @@ public class TestCaseRunner extends Thread {
 	}
 	
 	protected void setError(MojoExecutionException error) {
+		getLog().debug(this + " Caught ERROR " + error);
 		this.getTestCase().setError(error);
 	}
 	
 	protected void setFailure(MojoFailureException failure) {
+		getLog().debug(this + " Caught FAILURE " + failure);
 		this.getTestCase().setFailure(failure);
 	}
 	
@@ -333,7 +343,7 @@ public class TestCaseRunner extends Thread {
 			}
 		}
 		
-		getLog().debug(this + " Finished running test case");
+		getLog().debug(this + " Finished running test case (" + getTestCase().getStatus() + ")");
 		
 		// Free the latch
 		try {
@@ -355,12 +365,11 @@ public class TestCaseRunner extends Thread {
 	
 	synchronized protected SeleneseWebDriver initWebDriver() throws MalformedURLException, CapabilitiesNotFoundException, InterruptedException, SeleniumNodeNameException {
 		final Log log = getLog();
-		boolean keepRetrying = true;
+		int remainingAttempts = 10;
 		SeleneseWebDriver driver = null;
-		while(keepRetrying) {
+		while(remainingAttempts > 0) {
 			try {
-				keepRetrying = false;
-
+				
 				// Run the startDelay sleep
 				Thread.sleep(getStartDelay());
 
@@ -377,13 +386,15 @@ public class TestCaseRunner extends Thread {
 				if(getCommandInterval() > 0) {
 					Thread.sleep((long) (Math.random() * getCommandInterval()));
 				}
+				
+				return driver;
 			}
 			catch(UnreachableBrowserException e) {
-				keepRetrying = true;
+				remainingAttempts--;
 			}
 		}
 		
-		return driver;
+		throw new CapabilitiesNotFoundException(getCapability(), getServer(), "after 10 attempts");
 	}
 	
 	/*
