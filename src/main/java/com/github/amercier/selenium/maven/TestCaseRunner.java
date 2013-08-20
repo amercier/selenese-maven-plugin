@@ -359,10 +359,11 @@ public class TestCaseRunner extends Thread {
 		SeleneseWebDriver driver = null;
 		while(keepRetrying) {
 			try {
+				keepRetrying = false;
+
 				// Run the startDelay sleep
 				Thread.sleep(getStartDelay());
 
-				keepRetrying = false;
 				driver = new SeleneseWebDriver(getBaseUrl(), getServerURL(), getCapability().toCapabilities(), new com.github.amercier.selenium.selenese.log.Log() {
 					public void warn (String message) { log.warn (TestCaseRunner.this + " " + message); }
 					public void info (String message) { log.info (TestCaseRunner.this + " " + message); }
@@ -370,7 +371,7 @@ public class TestCaseRunner extends Thread {
 					public void debug(String message) { log.debug(TestCaseRunner.this + " " + message); }
 				}, getWaitTimeout());
 
-				getLog().info(this + " Starting on " + getNodeName(driver));
+				getLog().info(this + " Starting on " + getNodeName(driver) + " (" + driver.getSessionId() + ")");
 
 				// Run a random sleep to de-sync the runners
 				if(getCommandInterval() > 0) {
